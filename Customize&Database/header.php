@@ -32,6 +32,7 @@
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manage_users.php">Users</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"> Update Books</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageOrder.php">Orders</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageStaff.php">Manage Staff</a></li>
                 <?php endif; ?>
             </ul>
             <ul class="navbar-nav">
@@ -41,7 +42,9 @@
                             <?= htmlspecialchars($_SESSION['user_name']) ?> (<?= $_SESSION['user_role'] ?>)
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="../Customer/logout.php">Logout</a></li>
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customize&Database/changePassword.php">Change Password</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/logout.php">Logout</a></li>
                         </ul>
                     </li>
                 <?php else: ?>
