@@ -41,7 +41,6 @@ function previewImage(input, previewId) {
     }
 }
 
-
 function handleDecrement(e) {
     const wrapper = e.target.closest('.input-group');
     if (!wrapper) return;
