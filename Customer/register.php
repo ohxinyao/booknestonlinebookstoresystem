@@ -52,7 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         </div>
                         <div class="mb-3">
                             <label>Password</label>
-                            <input type="password" name="password" class="form-control" minlength="6" required>
+                            <div class="input-group">
+                                <input type="password" name="password" id="password" class="form-control" minlength="6" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show Password</button>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Register</button>
                     </form>
@@ -64,4 +67,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
     </div>
 </div>
+<script>
+function togglePassword(fieldId) {
+    var field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+    } else {
+        field.type = "password";
+    }
+}
+</script>
 <?php include '../Customize&Database/footer.php'; ?>
