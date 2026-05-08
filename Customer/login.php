@@ -14,6 +14,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (!$user['email_verified']) {
             $error = "Please verify your email first. Check your inbox.";
         } else {
+            if (isset($user['must_change_password']) && $user['must_change_password'] == 1 && $user['role'] == 'staff') {
+                $_SESSION['force_password_change'] = true;
+                $_SESSION['temp_user_id'] = $user['id'];
+                header("Location: ../Customize&Database/changePassword.php?force=1");
+                exit;
+            }
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
@@ -43,7 +49,10 @@ include '../Customize&Database/header.php';
                     </div>
                     <div class="mb-3">
                         <label>Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <div class="input-group">
+                            <input type="password" name="password" id="password" class="form-control" required>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show Password</button>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100">Login</button>
                 </form>
@@ -55,4 +64,16 @@ include '../Customize&Database/header.php';
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    var field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+    } else {
+        field.type = "password";
+    }
+}
+</script>
+
 <?php include '../Customize&Database/footer.php'; ?>
