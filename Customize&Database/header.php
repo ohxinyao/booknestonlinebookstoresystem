@@ -10,7 +10,19 @@
     <link rel="stylesheet" href="/finalproject/booknestonlinebookstoresystem/Customize&Database/design.css">
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+<?php
+$navbarColor = 'bg-dark';
+if (isset($_SESSION['user_role'])) {
+    if ($_SESSION['user_role'] == 'staff') {
+        $navbarColor = 'bg-success';   
+    } elseif ($_SESSION['user_role'] == 'admin') {
+        $navbarColor = 'bg-danger';    
+    }
+}
+?>
+
+<nav class="navbar navbar-expand-lg navbar-dark <?= $navbarColor ?>">
     <div class="container">
         <a class="navbar-brand" href="/finalproject/booknestonlinebookstoresystem/Customer/index.php">📚 BookNest</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
