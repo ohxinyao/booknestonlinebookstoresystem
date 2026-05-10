@@ -6,6 +6,22 @@
     background-repeat: no-repeat;
 }
 
+.voucher-bg-1 {
+    background-image: url('/finalproject/booknestonlinebookstoresystem/Image/background2.jpg');
+    background-size: cover;
+    background-position: center;
+}
+.voucher-bg-2 {
+    background-image: url('/finalproject/booknestonlinebookstoresystem/Image/background3.jpg');
+    background-size: cover;
+    background-position: center;
+}
+.voucher-bg-3 {
+    background-image: url('/finalproject/booknestonlinebookstoresystem/Image/background4.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -45,6 +61,12 @@ main.container {
     overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.book-card img {
+    width: 100%;
+    height: 220px;   
+    object-fit: cover;
 }
 
 .book-card:hover {
@@ -191,10 +213,68 @@ a.btn-danger {
     opacity: 0.7;
 }
 
-
+/* ===== 轮播图样式（所有文字白色 + 深色阴影）===== */
+#voucherCarousel {
+    max-width: 100%;
+}
 .carousel-item {
     transition: transform 0.6s ease-in-out;
+    height: 350px;
 }
+.carousel-item .position-relative {
+    height: 100%;
+}
+.carousel-item .voucher-bg-1,
+.carousel-item .voucher-bg-2,
+.carousel-item .voucher-bg-3 {
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+}
+.carousel-item .d-flex {
+    background-color: transparent !important;
+    border-radius: inherit;
+}
+
+.carousel-item p {
+    font-size: 1.6rem;   
+    margin-top: 0.75rem;
+    line-height: 1.4;
+}
+
+.carousel-item p.lead {
+    font-size: 1.6rem;
+}
+.carousel-item p.mt-3 {
+    font-size: 1.4rem;
+}
+
+.carousel-item h2,
+.carousel-item p,
+.carousel-item .badge {
+    color: #ffffff !important;
+}
+.carousel-item h2,
+.carousel-item p {
+    text-shadow: 4px 4px 12px rgba(0, 0, 0, 0.9);
+}
+.carousel-item .badge {
+    background-color: #ffc107 !important;
+    font-weight: 800;
+    padding: 0.5rem 1.2rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+}
+.carousel-item .badge:hover {
+    transform: scale(1.02);
+}
+
+.carousel-item:last-child h2,
+.carousel-item:last-child p {
+    color: #ffffff !important;
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.9);
+}
+
 .carousel-indicators button {
     width: 10px;
     height: 10px;
@@ -203,13 +283,11 @@ a.btn-danger {
     background-color: #fff;
     opacity: 0.5;
 }
-
 .carousel-indicators button.active {
     opacity: 1;
     background-color: #f8b400;
     transform: scale(1.2);
 }
-
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
     background-color: rgba(0,0,0,0.3);
@@ -218,26 +296,15 @@ a.btn-danger {
     background-size: 50%;
 }
 
-.carousel-item h2 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-}
-.carousel-item p {
-    font-size: 1.25rem;
-    margin-top: 0.5rem;
-}
-.carousel-item .badge {
-    font-size: 1rem;
-    padding: 0.5rem 1rem;
-}
-
 @media (max-width: 768px) {
+    .carousel-item {
+        height: 280px;
+    }
     .carousel-item .p-5 {
         padding: 2rem !important;
     }
     .carousel-item h2 {
-        font-size: 1.8rem !important;  /* 放大移动端标题 */
+        font-size: 1.8rem !important;
     }
     .carousel-item p {
         font-size: 1rem !important;
