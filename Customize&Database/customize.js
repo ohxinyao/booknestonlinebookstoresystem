@@ -8,10 +8,10 @@ function showToast(message, type = 'success') {
     }
 
     const toastHtml = `
-        <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert">
+        <div class="toast align-items-center text-white bg-${type} border-0 show" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">${message}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     `;
@@ -92,10 +92,71 @@ function attachCartQuantityEvents() {
     });
 }
 
+function setNavbarScrollState() {
+    const navbar = document.querySelector('.navbar');
+    if (!navbar) return;
+    if (window.scrollY > 40) {
+        navbar.classList.add('shrink');
+    } else {
+        navbar.classList.remove('shrink');
+    }
+}
+
+function buildBackToTopButton() {
+    let button = document.querySelector('.back-to-top');
+    if (button) return button;
+
+    button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'back-to-top';
+    button.setAttribute('aria-label', 'Back to top');
+    button.innerHTML = '<i class="fas fa-chevron-up"></i>';
+    button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    document.body.appendChild(button);
+    return button;
+}
+
+function updateBackToTopVisibility(button) {
+    if (window.scrollY > 300) {
+        button.classList.add('show');
+    } else {
+        button.classList.remove('show');
+    }
+}
+
+function scrollReveal() {
+    const elements = document.querySelectorAll('.reveal, .card, .book-card');
+    elements.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 80) {
+            el.classList.add('visible');
+        }
+    });
+}
+
+function attachInteractiveCards() {
+    const cards = document.querySelectorAll('.book-card, .card');
+    cards.forEach(card => {
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const px = (x / rect.width - 0.5) * 14;
+            const py = (y / rect.height - 0.5) * 14;
+            card.style.transform = `perspective(900px) rotateX(${ -py }deg) rotateY(${ px }deg) translateY(-4px)`;
+            card.style.transition = 'transform 0.1s ease';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.transition = 'transform 0.35s ease';
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const addToCartForms = document.querySelectorAll('.add-to-cart-form');
     addToCartForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function() {
             setTimeout(() => {
                 showToast('Book added to cart!', 'success');
             }, 100);
@@ -112,4 +173,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     attachCartQuantityEvents();
+    setNavbarScrollState();
+    const backToTop = buildBackToTopButton();
+    updateBackToTopVisibility(backToTop);
+    scrollReveal();
+    attachInteractiveCards();
+
+    window.addEventListener('scroll', () => {
+        setNavbarScrollState();
+        updateBackToTopVisibility(backToTop);
+        scrollReveal();
+    });
 });
