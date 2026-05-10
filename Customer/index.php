@@ -14,26 +14,28 @@ include '../Customize&Database/header.php';
             </div>
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <div class="position-relative text-white p-5 text-center" style="background: linear-gradient(135deg, #1e3c72, #2a5298); min-height: 300px;">
-                        <div class="d-flex flex-column justify-content-center h-100">
+                    <div class="position-relative text-white p-5 text-center voucher-bg-1" style="min-height: 300px; background-size: cover; background-position: center;">
+                        <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
                             <h2 class="display-5 fw-bold">🎉 20% OFF on Fiction Books!</h2>
-                            <p class="lead">Use code: <span class="badge bg-light text-dark fs-6 px-3 py-2 mt-2">FICTION20</span></p>
+                            <p class="lead">Use code: <span class="badge bg-light text-dark fs-6 px-3 py-2 mt-2">BOOKNEST20</span></p>
                             <p class="mt-3">Exclusively online – limited time offer</p>
                         </div>
                     </div>
                 </div>
+  
                 <div class="carousel-item">
-                    <div class="position-relative text-white p-5 text-center" style="background: linear-gradient(135deg, #0f9b0f, #0b5e0b); min-height: 300px;">
-                        <div class="d-flex flex-column justify-content-center h-100">
+                    <div class="position-relative text-white p-5 text-center voucher-bg-2" style="min-height: 300px; background-size: cover; background-position: center;">
+                        <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
                             <h2 class="display-5 fw-bold">📦 Free Shipping on Orders > RM50</h2>
                             <p class="lead">Nationwide delivery – no hidden fees</p>
                             <p class="mt-3">Valid until the end of this month</p>
                         </div>
                     </div>
                 </div>
+          
                 <div class="carousel-item">
-                    <div class="position-relative text-dark p-5 text-center" style="background: linear-gradient(135deg, #ff8c00, #ffc107); min-height: 300px;">
-                        <div class="d-flex flex-column justify-content-center h-100">
+                    <div class="position-relative text-white p-5 text-center voucher-bg-3" style="min-height: 300px; background-size: cover; background-position: center;">
+                        <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
                             <h2 class="display-5 fw-bold">⭐ New Member? Get 10% off!</h2>
                             <p class="lead">Welcome voucher for your first purchase</p>
                             <p class="mt-3">Sign up now and save</p>
