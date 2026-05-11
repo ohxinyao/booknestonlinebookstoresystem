@@ -1,14 +1,51 @@
 <?php
+
+require_once __DIR__ . '/../Vendor/phpMailer/PHPMailer.php';
+require_once __DIR__ . '/../Vendor/phpMailer/SMTP.php';
+require_once __DIR__ . '/../Vendor/phpMailer/Exception.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
+
 function sanitize($input) {
     return htmlspecialchars(strip_tags(trim($input)));
 }
 
 function sendEmail($to, $subject, $body) {
-    $headers = "MIME-Version: 1.0\r\n";
-    $headers .= "Content-type: text/html; charset=UTF-8\r\n";
-    $headers .= "From: noreply@booknest.local\r\n";
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host       = 'smtp.gmail.com';          
+        $mail->SMTPAuth   = true;
+        $mail->Username   = 'phangyuxue@graduate.utm.my';    
+        $mail->Password   = 'wcuxenryjgflqdio';    
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port       = 587;
+
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer'       => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true,
+            ],
+        ];
+
+        $mail->setFrom('phangyuxue@graduate.utm.my', 'BookNest System');  
+        $mail->addAddress($to);
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body    = $body;
+        $mail->AltBody = strip_tags($body);  
+
+        $mail->send();
+        return true;
+    } 
     
-    return mail($to, $subject, $body, $headers);
+    catch (Exception $e) {
+        error_log("There is an error on sending email: " . $mail->ErrorInfo);
+        return false;
+    }
 }
 
 function generateToken() {
