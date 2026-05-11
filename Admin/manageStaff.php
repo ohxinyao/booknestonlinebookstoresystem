@@ -1,4 +1,5 @@
 <?php
+session_start(); 
 require_once '../Customize&Database/access.php';
 requireRole('admin'); 
 require_once '../Customize&Database/function.php';
@@ -8,23 +9,35 @@ if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     $stmt = $pdo->prepare("DELETE FROM users WHERE id = ? AND role = 'staff'");
     $stmt->execute([$id]);
+    $_SESSION['flash_success'] = "Staff deleted successfully.";
     header("Location: manageStaff.php");
     exit;
 }
 
 if (isset($_GET['reset'])) {
     $id = (int)$_GET['reset'];
-    $nameStmt = $pdo->prepare("SELECT name FROM users WHERE id = ? AND role = 'staff'");
-    $nameStmt->execute([$id]);
-    $staffName = $nameStmt->fetchColumn();
-    if (!$staffName) {
-        $staffName = "this staff member";
+    $infoStmt = $pdo->prepare("SELECT name, email FROM users WHERE id = ? AND role = 'staff'");
+    $infoStmt->execute([$id]);
+    $staff = $infoStmt->fetch();
+    if ($staff) {
+        $staffName = $staff['name'];
+        $staffEmail = $staff['email'];
+        
+        $newPassword = bin2hex(random_bytes(4)); 
+        $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+        $updateStmt = $pdo->prepare("UPDATE users SET password = ?, must_change_password = 1 WHERE id = ? AND role = 'staff'");
+        $updateStmt->execute([$hashed, $id]);
+        
+        $subject = "Your BookNest staff password has been reset";
+        $body = "Dear $staffName,<br><br>Your new password is: <strong>$newPassword</strong><br><br>Please login and change your password immediately.<br><br>Best regards,<br>BookNest Admin";
+        sendEmail($staffEmail, $subject, $body);
+        
+        $_SESSION['flash_success'] = "Password for <strong>$staffName</strong> has been reset and sent to their email.";
+    } else {
+        $_SESSION['flash_success'] = "Staff not found.";
     }
-    $newPassword = bin2hex(random_bytes(4)); 
-    $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("UPDATE users SET password = ?, must_change_password = 1 WHERE id = ? AND role = 'staff'");
-    $stmt->execute([$hashed, $id]);
-    $resetMsg = "New password for <strong>$staffName</strong> is: <strong>$newPassword</strong> (please inform the staff)";
+    header("Location: manageStaff.php");
+    exit;
 }
 
 $editStaff = null;
@@ -41,13 +54,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['id']) && $_POST['id'] > 0) {
         $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ? WHERE id = ? AND role = 'staff'");
         $stmt->execute([$name, $email, $_POST['id']]);
-        $success = "Staff updated.";
-    } else {
+        $_SESSION['flash_success'] = "Staff updated.";
+    } 
+    else{
         $defaultPassword = '0123456789';
         $hashed = password_hash($defaultPassword, PASSWORD_DEFAULT);
         $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, email_verified, must_change_password) VALUES (?, ?, ?, ?, 1, 1)");
         $stmt->execute([$name, $email, $hashed, $role]);
-        $_SESSION['flash_success'] = "Staff added. Default password is: 0123456789 (staff will be forced to change on first login)";
+        $subject = "Welcome to BookNest Staff";
+        $body = "Dear $name,<br><br>Your staff account has been created.<br>Default password: <strong>$defaultPassword</strong><br><br>Please login and change your password immediately.<br><br>Login URL: <a href='http://localhost/finalproject/booknestonlinebookstoresystem/Customer/login.php'>http://localhost/finalproject/booknestonlinebookstoresystem/Customer/login.php</a><br><br>Best regards,<br>BookNest Admin";
+        sendEmail($email, $subject, $body);
+        
+        $_SESSION['flash_success'] = "Staff added. Default password is: $defaultPassword (sent to staff email)";
     }
     header("Location: manageStaff.php");
     exit;
@@ -62,12 +80,10 @@ if (isset($_SESSION['flash_success'])) {
     unset($_SESSION['flash_success']);
 }
 ?>
-<?php if (isset($resetMsg)) echo "<div class='alert alert-success'>$resetMsg</div>"; ?>
-<?php if (isset($success)) echo "<div class='alert alert-success'>$success</div>"; ?>
 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#staffModal" onclick="clearForm()">Add New Staff</button>
 <table class="table table-bordered">
     <thead>
-        <tr><th>ID</th><th>Name</th><th>Email</th><th>Created At</th><th>Actions</th></tr>
+        <tr><th>#</th><th>Name</th><th>Email</th><th>Created At</th><th>Actions</th></tr>
     </thead>
     <tbody>
         <?php $sn = 1; ?>
@@ -79,7 +95,7 @@ if (isset($_SESSION['flash_success'])) {
             <td><?= $staff['created_at'] ?></td>
             <td>
                 <a href="?edit=<?= $staff['id'] ?>" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#staffModal" onclick="editStaff(<?= htmlspecialchars(json_encode($staff)) ?>)">Edit</a>
-                <a href="?reset=<?= $staff['id'] ?>" class="btn btn-sm btn-info" onclick="return confirm('Reset password? New random password will be generated.')">Reset Pwd</a>
+                <a href="?reset=<?= $staff['id'] ?>" class="btn btn-sm btn-info" onclick="return confirm('Reset password? A new random password will be generated and emailed to the staff.')">Reset Pwd</a>
                 <a href="?delete=<?= $staff['id'] ?>" class="btn btn-sm btn-danger confirm-delete">Delete</a>
             </td>
         </tr>
@@ -87,6 +103,7 @@ if (isset($_SESSION['flash_success'])) {
     </tbody>
 </table>
 
+<!-- Modal for Add/Edit -->
 <div class="modal fade" id="staffModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
