@@ -11,7 +11,6 @@ $success = '';
 if (empty($token)) {
     $error = "No reset token provided.";
 } else {
-    // 检查 token 是否有效且未过期
     $stmt = $pdo->prepare("SELECT id, email FROM users WHERE BINARY reset_token = ? AND reset_expires > NOW()");
     $stmt->execute([$token]);
     $user = $stmt->fetch();
@@ -19,7 +18,6 @@ if (empty($token)) {
     if (!$user) {
         $error = "Invalid or expired token. Please request a new password reset link.";
     } else {
-        // 处理新密码提交
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $newPassword = $_POST['password'];
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
@@ -48,7 +46,10 @@ if (empty($token)) {
                     <form method="POST">
                         <div class="mb-3">
                             <label>New Password</label>
-                            <input type="password" name="password" class="form-control" minlength="6" required>
+                            <div class="input-group">
+                                <input type="password" name="password" id="password" class="form-control" minlength="6" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show Password</button>
+                                </div> 
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Reset Password</button>
                     </form>
@@ -57,5 +58,15 @@ if (empty($token)) {
         </div>
     </div>
 </div>
+
+<script>
+function togglePassword(fieldId) {
+    var field = document.getElementById(fieldId);
+    if (field.type === "password") {
+        field.type = "text";
+    } else {
+        field.type = "password";
+    }
+}</script>
 
 <?php include '../Customize&Database/footer.php'; ?>
