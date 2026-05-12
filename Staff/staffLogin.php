@@ -16,7 +16,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             if ($user['role'] !== 'staff') {
                 $error = "This login page is for staff only. Please use the <a href='/finalproject/booknestonlinebookstoresystem/Customer/login.php'>Customer Login</a> or <a href='/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php'>Admin Login</a>.";
-            } else {
+            } 
+            
+            else {
                 if (isset($user['must_change_password']) && $user['must_change_password'] == 1) {
                     $_SESSION['force_password_change'] = true;
                     $_SESSION['temp_user_id'] = $user['id'];
