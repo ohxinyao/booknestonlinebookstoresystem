@@ -67,6 +67,7 @@ include '../Customize&Database/header.php';
             <div class="card-body">
                 <h5 class="card-title"><?= htmlspecialchars($bestseller['title']) ?></h5>
                 <p class="card-text">RM <?= number_format($bestseller['price'], 2) ?></p>
+                <p class="card-text text-muted small"><i class="fas fa-chart-line"></i> Sold: <?= (int)$bestseller['sales'] ?> books</p>
                 <a href="bookDetail.php?id=<?= $bestseller['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
             </div>
         </div>
