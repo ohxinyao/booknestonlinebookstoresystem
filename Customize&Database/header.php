@@ -59,10 +59,20 @@ if (isset($_SESSION['user_role'])) {
                             <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/logout.php">Logout</a></li>
                         </ul>
                     </li>
-                <?php else: ?>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/login.php">Login</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/register.php">Register</a></li>
-                <?php endif; ?>
+               <?php else: ?>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Login
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
+            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/login.php">Customer Login</a></li>
+            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php">Login as admin</a></li>
+            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php">Login as staff</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/register.php">Register</a></li>
+        </ul>
+    </li>
+<?php endif; ?>
             </ul>
         </div>
     </div>
