@@ -53,7 +53,7 @@ include '../Customize&Database/header.php';
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-lock"></i></span>
                             <input type="password" name="password" id="password" class="form-control" required>
-                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show</button>
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show Password</button>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 rounded-3">Login</button>
