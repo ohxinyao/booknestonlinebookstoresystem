@@ -4,14 +4,15 @@ require_once '../Customize&Database/function.php';
 include '../Customize&Database/header.php';
 
 $token = $_GET['token'] ?? '';
-$token=trim($token);
+$token = trim($token);
 $error = '';
 $success = '';
+$loginLink = '';
 
 if (empty($token)) {
     $error = "No reset token provided.";
 } else {
-    $stmt = $pdo->prepare("SELECT id, email FROM users WHERE BINARY reset_token = ? AND reset_expires > NOW()");
+    $stmt = $pdo->prepare("SELECT id, email, role FROM users WHERE BINARY reset_token = ? AND reset_expires > NOW()");
     $stmt->execute([$token]);
     $user = $stmt->fetch();
 
@@ -21,11 +22,17 @@ if (empty($token)) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $newPassword = $_POST['password'];
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-
             $update = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
             $update->execute([$hashedPassword, $user['id']]);
 
-            $success = "Your password has been reset successfully. <a href='login.php'>Login here</a>";
+            if ($user['role'] == 'admin') {
+                $loginLink = "../Admin/adminLogin.php";
+            } elseif ($user['role'] == 'staff') {
+                $loginLink = "../Staff/staffLogin.php";
+            } else {
+                $loginLink = "login.php";
+            }
+            $success = "Your password has been reset successfully. <a href='$loginLink'>Login here</a>";
         }
     }
 }
@@ -49,7 +56,7 @@ if (empty($token)) {
                             <div class="input-group">
                                 <input type="password" name="password" id="password" class="form-control" minlength="6" required>
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show Password</button>
-                                </div> 
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Reset Password</button>
                     </form>
@@ -67,6 +74,7 @@ function togglePassword(fieldId) {
     } else {
         field.type = "password";
     }
-}</script>
+}
+</script>
 
 <?php include '../Customize&Database/footer.php'; ?>
