@@ -64,21 +64,21 @@ if ($userRole == 'admin' && !$forceChange) {
                                 <label>Current Password</label>
                                 <div class="input-group">
                                     <input type="password" name="current_password" id="current_password" class="form-control" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show</button>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show Password</button>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>New Password</label>
                                 <div class="input-group">
                                     <input type="password" name="new_password" id="new_password" class="form-control" minlength="6" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show</button>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password  </button>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Confirm New Password</label>
                                 <div class="input-group">
                                     <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="6" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show</button>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Update Password</button>
@@ -143,14 +143,14 @@ if ($forceChange) {
                                 <label>New Password</label>
                                 <div class="input-group">
                                     <input type="password" name="new_password" id="new_password" class="form-control" minlength="6" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show</button>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label>Confirm New Password</label>
                                 <div class="input-group">
                                     <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="6" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show</button>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Update Password</button>
