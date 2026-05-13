@@ -26,12 +26,17 @@ if (empty($token)) {
             $update->execute([$hashedPassword, $user['id']]);
 
             if ($user['role'] == 'admin') {
-                $loginLink = "../Admin/adminLogin.php";
-            } elseif ($user['role'] == 'staff') {
-                $loginLink = "../Staff/staffLogin.php";
-            } else {
-                $loginLink = "login.php";
+                $loginLink = "/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php";
+            } 
+            
+            elseif ($user['role'] == 'staff') {
+                $loginLink = "/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php";
+            } 
+            
+            else {
+                $loginLink = "/finalproject/booknestonlinebookstoresystem/Customer/login.php";
             }
+
             $success = "Your password has been reset successfully. <a href='$loginLink'>Login here</a>";
         }
     }
