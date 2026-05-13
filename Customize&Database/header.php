@@ -45,6 +45,7 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Update Books</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageOrder.php"><i class="fas fa-box"></i> Orders</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageStaff.php"><i class="fas fa-user"></i> Manage Staff</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/approve_password_changes.php"><i class="fas fa-check-circle"></i> Approve Password Changes</a></li>
                 <?php endif; ?>
             </ul>
             <ul class="navbar-nav">
