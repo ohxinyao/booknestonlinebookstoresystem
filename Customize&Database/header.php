@@ -70,7 +70,7 @@ if (isset($_SESSION['user_role'])) {
             <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php">Login as admin</a></li>
             <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php">Login as staff</a></li>
             <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/register.php">Register</a></li>
+            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/register.php">Register as customer</a></li>
         </ul>
     </li>
 <?php endif; ?>
