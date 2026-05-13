@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, email_verified, must_change_password) VALUES (?, ?, ?, ?, 1, 1)");
         $stmt->execute([$name, $email, $hashed, $role]);
         $subject = "Welcome to BookNest Staff";
-        $body = "Dear $name,<br><br>Your staff account has been created.<br>Default password: <strong>$defaultPassword</strong><br><br>Please login and change your password immediately.<br><br>Login URL: <a href='http://localhost/finalproject/booknestonlinebookstoresystem/Customer/login.php'>http://localhost/finalproject/booknestonlinebookstoresystem/Customer/login.php</a><br><br>Best regards,<br>BookNest Admin";
+        $body = "Dear $name,<br><br>Your staff account has been created.<br>Default password: <strong>$defaultPassword</strong><br><br>Please login and change your password immediately.<br><br>Login URL: <a href='http://localhost/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php'>http://localhost/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php</a><br><br>Best regards,<br>BookNest Admin";
         sendEmail($email, $subject, $body);
         
         $_SESSION['flash_success'] = "Staff added. Default password is: $defaultPassword (sent to staff email)";
