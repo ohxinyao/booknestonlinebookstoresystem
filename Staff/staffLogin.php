@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 if (isset($user['must_change_password']) && $user['must_change_password'] == 1) {
                     $_SESSION['force_password_change'] = true;
                     $_SESSION['temp_user_id'] = $user['id'];
-                    header("Location: ../Customer/change_password.php?force=1");
+                    header("Location: ../Customize&Database/changePassword.php?force=1");
                     exit;
                 }
                 $_SESSION['user_id'] = $user['id'];
