@@ -102,20 +102,6 @@ function setNavbarScrollState() {
     }
 }
 
-function buildBackToTopButton() {
-    let button = document.querySelector('.back-to-top');
-    if (button) return button;
-
-    button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'back-to-top';
-    button.setAttribute('aria-label', 'Back to top');
-    button.innerHTML = '<i class="fas fa-chevron-up"></i>';
-    button.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    document.body.appendChild(button);
-    return button;
-}
-
 function updateBackToTopVisibility(button) {
     if (window.scrollY > 300) {
         button.classList.add('show');
