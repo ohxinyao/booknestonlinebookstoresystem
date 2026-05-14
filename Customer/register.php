@@ -6,24 +6,31 @@ include '../Customize&Database/header.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $name = sanitize($_POST['name']);
     $email = sanitize($_POST['email']);
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-    $token = generateToken();
-
-    $check = $pdo->prepare("SELECT id FROM users WHERE email = ?");
-    $check->execute([$email]);
-    if ($check->rowCount() > 0) {
-        $error = "Email already registered.";
+    $password_raw = $_POST['password'];
+    
+    $strength = validatePasswordStrength($password_raw);
+    if ($strength !== true) {
+        $error = $strength;
     } else {
-        $sql = "INSERT INTO users (name, email, password, verification_token) VALUES (?, ?, ?, ?)";
-        $stmt = $pdo->prepare($sql);
-        if ($stmt->execute([$name, $email, $password, $token])) {
-            $verifyLink = "http://localhost/finalproject/booknestonlinebookstoresystem/Customer/emailVerify.php?token=$token";
-            $subject = "Verify your BookNest account";
-            $body = "Hello $name,<br>Click <a href='$verifyLink'>here</a> to verify your email address.";
-            sendEmail($email, $subject, $body);
-            $success = "Registration successful! Please check your email to verify your account.";
+        $password = password_hash($password_raw, PASSWORD_DEFAULT);
+        $token = generateToken();
+
+        $check = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $check->execute([$email]);
+        if ($check->rowCount() > 0) {
+            $error = "Email already registered.";
         } else {
-            $error = "Registration failed. Please try again.";
+            $sql = "INSERT INTO users (name, email, password, verification_token) VALUES (?, ?, ?, ?)";
+            $stmt = $pdo->prepare($sql);
+            if ($stmt->execute([$name, $email, $password, $token])) {
+                $verifyLink = "http://localhost/finalproject/booknestonlinebookstoresystem/Customer/emailVerify.php?token=$token";
+                $subject = "Verify your BookNest account";
+                $body = "Hello $name,<br>Click <a href='$verifyLink'>here</a> to verify your email address.";
+                sendEmail($email, $subject, $body);
+                $success = "Registration successful! Please check your email to verify your account.";
+            } else {
+                $error = "Registration failed. Please try again.";
+            }
         }
     }
 }
@@ -53,9 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <div class="mb-3">
                             <label>Password</label>
                             <div class="input-group">
-                                <input type="password" name="password" id="password" class="form-control" minlength="6" required>
+                                <input type="password" name="password" id="password" class="form-control" minlength="8" required>
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">Show Password</button>
                             </div>
+                            <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Register</button>
                     </form>
