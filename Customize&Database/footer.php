@@ -9,5 +9,6 @@
         </div>
         <p>&copy; <?= date('Y') ?> BookNest Online Bookstore. All rights reserved.</p>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/finalproject/booknestonlinebookstoresystem/Customize&Database/customize.js"></script>
     </div>
 </footer>
