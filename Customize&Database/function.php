@@ -75,4 +75,20 @@ function getStarRating($rating) {
     $stars = str_repeat('★', $full) . ($half ? '½' : '') . str_repeat('☆', $empty);
     return $stars;
 }
+
+function validatePasswordStrength($password) {
+    if (strlen($password) < 8) {
+        return "Password must be at least 8 characters long.";
+    }
+    if (!preg_match('/[A-Z]/', $password)) {
+        return "Password must contain at least one uppercase letter.";
+    }
+    if (!preg_match('/[0-9]/', $password)) {
+        return "Password must contain at least one number.";
+    }
+    if (!preg_match('/[\W_]/', $password)) {
+        return "Password must contain at least one special character (e.g., !@#$%^&*).";
+    }
+    return true;
+}
 ?>
