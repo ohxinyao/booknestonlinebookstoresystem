@@ -24,12 +24,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     }
 }
 
-// Handle review submission
+// Handle review submission (with anonymous option)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && isset($_SESSION['user_id'])) {
     $rating = intval($_POST['rating']);
     $comment = trim($_POST['comment']);
-    $stmt = $pdo->prepare("INSERT INTO reviews (book_id, user_id, rating, comment) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE rating = ?, comment = ?");
-    $stmt->execute([$book_id, $_SESSION['user_id'], $rating, $comment, $rating, $comment]);
+    $is_anonymous = isset($_POST['is_anonymous']) ? 1 : 0;
+    
+    $stmt = $pdo->prepare("INSERT INTO reviews (book_id, user_id, rating, comment, is_anonymous) 
+                            VALUES (?, ?, ?, ?, ?) 
+                            ON DUPLICATE KEY UPDATE rating = ?, comment = ?, is_anonymous = ?");
+    $stmt->execute([$book_id, $_SESSION['user_id'], $rating, $comment, $is_anonymous, 
+                    $rating, $comment, $is_anonymous]);
+    
     // Recalculate average rating
     $avgStmt = $pdo->prepare("SELECT AVG(rating) as avg, COUNT(*) as cnt FROM reviews WHERE book_id = ?");
     $avgStmt->execute([$book_id]);
@@ -39,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && is
     exit;
 }
 
-// Fetch reviews
+// Fetch reviews (including is_anonymous)
 $reviewsStmt = $pdo->prepare("SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.book_id = ? ORDER BY r.created_at DESC");
 $reviewsStmt->execute([$book_id]);
 $reviews = $reviewsStmt->fetchAll();
@@ -86,12 +92,11 @@ $reviews = $reviewsStmt->fetchAll();
                     <i class="far fa-heart"></i> Add to Wishlist
                 </button>
             </form>
-        <?php if ($wishlist_success): ?>
-    <div class="alert alert-success mt-2">
-        Added to wishlist! <a href="wishlist.php">View wishlist</a>
-    </div>
-<?php endif; ?>
-
+            <?php if ($wishlist_success): ?>
+                <div class="alert alert-success mt-2">
+                    Added to wishlist! <a href="wishlist.php">View wishlist</a>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
         <hr>
         <h4>Rate & Review this book</h4>
@@ -109,6 +114,12 @@ $reviews = $reviewsStmt->fetchAll();
                 <div class="mb-2">
                     <textarea name="comment" rows="3" class="form-control" placeholder="Write your review..."></textarea>
                 </div>
+                <div class="mb-2">
+                    <div class="form-check">
+                        <input type="checkbox" name="is_anonymous" value="1" class="form-check-input" id="anonymousCheck">
+                        <label class="form-check-label" for="anonymousCheck">Post anonymously (name will not be shown)</label>
+                    </div>
+                </div>
                 <button type="submit" name="submit_review" class="btn btn-warning">Submit Review</button>
             </form>
         <?php else: ?>
@@ -121,7 +132,7 @@ $reviews = $reviewsStmt->fetchAll();
         <?php else: ?>
             <?php foreach ($reviews as $rev): ?>
                 <div class="border rounded p-2 mb-2 bg-light">
-                    <strong><?= htmlspecialchars($rev['name']) ?></strong>
+                    <strong><?= $rev['is_anonymous'] ? 'Anonymous' : htmlspecialchars($rev['name']) ?></strong>
                     <span class="star-rating">★ <?= $rev['rating'] ?></span>
                     <small class="text-muted"><?= date('d M Y', strtotime($rev['created_at'])) ?></small>
                     <p class="mt-1"><?= nl2br(htmlspecialchars($rev['comment'])) ?></p>
