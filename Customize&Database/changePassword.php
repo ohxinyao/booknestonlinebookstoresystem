@@ -34,15 +34,18 @@ if ($userRole == 'admin' && !$forceChange) {
             $error = "Current password is incorrect.";
         } elseif ($new !== $confirm) {
             $error = "New passwords do not match.";
-        } elseif (strlen($new) < 6) {
-            $error = "Password must be at least 6 characters.";
-        } elseif (password_verify($new, $currentHash)) {
-            $error = "New password cannot be the same as the current password.";
         } else {
-            $hashed = password_hash($new, PASSWORD_DEFAULT);
-            $update = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
-            $update->execute([$hashed, $userId]);
-            $success = "Password changed successfully.";
+            $strength = validatePasswordStrength($new);
+            if ($strength !== true) {
+                $error = $strength;
+            } elseif (password_verify($new, $currentHash)) {
+                $error = "New password cannot be the same as the current password.";
+            } else {
+                $hashed = password_hash($new, PASSWORD_DEFAULT);
+                $update = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $update->execute([$hashed, $userId]);
+                $success = "Password changed successfully.";
+            }
         }
     }
     include 'header.php';
@@ -70,14 +73,15 @@ if ($userRole == 'admin' && !$forceChange) {
                             <div class="mb-3">
                                 <label>New Password</label>
                                 <div class="input-group">
-                                    <input type="password" name="new_password" id="new_password" class="form-control" minlength="6" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password  </button>
+                                    <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
                                 </div>
+                                <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
                             </div>
                             <div class="mb-3">
                                 <label>Confirm New Password</label>
                                 <div class="input-group">
-                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="6" required>
+                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
                                     <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
                                 </div>
                             </div>
@@ -110,18 +114,21 @@ if ($forceChange) {
         $confirm = $_POST['confirm_password'];
         if ($new !== $confirm) {
             $error = "New passwords do not match.";
-        } elseif (strlen($new) < 6) {
-            $error = "Password must be at least 6 characters.";
         } else {
-            $hashed = password_hash($new, PASSWORD_DEFAULT);
-            $update = $pdo->prepare("UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?");
-            $update->execute([$hashed, $userId]);
-            unset($_SESSION['force_password_change']);
-            unset($_SESSION['temp_user_id']);
-            $success = "Password changed successfully. Please login again.";
-            session_destroy();
-            header("Refresh: 2; url=../Customer/login.php");
-            exit;
+            $strength = validatePasswordStrength($new);
+            if ($strength !== true) {
+                $error = $strength;
+            } else {
+                $hashed = password_hash($new, PASSWORD_DEFAULT);
+                $update = $pdo->prepare("UPDATE users SET password = ?, must_change_password = 0 WHERE id = ?");
+                $update->execute([$hashed, $userId]);
+                unset($_SESSION['force_password_change']);
+                unset($_SESSION['temp_user_id']);
+                $success = "Password changed successfully. Please login again.";
+                session_destroy();
+                header("Refresh: 2; url=../Customer/login.php");
+                exit;
+            }
         }
     }
     include 'header.php';
@@ -142,14 +149,15 @@ if ($forceChange) {
                             <div class="mb-3">
                                 <label>New Password</label>
                                 <div class="input-group">
-                                    <input type="password" name="new_password" id="new_password" class="form-control" minlength="6" required>
+                                    <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
                                     <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
                                 </div>
+                                <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
                             </div>
                             <div class="mb-3">
                                 <label>Confirm New Password</label>
                                 <div class="input-group">
-                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="6" required>
+                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
                                     <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
                                 </div>
                             </div>
