@@ -2,6 +2,7 @@
 session_start();
 require_once 'setDatabase.php';
 require_once 'access.php';
+require_once 'function.php';
 
 if (isset($_SESSION['user_id'])) {
     $userId = $_SESSION['user_id'];
