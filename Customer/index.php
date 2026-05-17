@@ -55,6 +55,14 @@ include '../Customize&Database/header.php';
     </div>
 </div>
 
+<div class="alert alert-info text-center mb-4" role="alert">
+    <strong>🎁 Available Vouchers:</strong> 
+    <span class="badge bg-success mx-1">BOOKNEST20</span> - 20% off on Fiction Books &nbsp;|&nbsp;
+    <span class="badge bg-success mx-1">WELCOME10</span> - 10% off (new members) &nbsp;|&nbsp;
+    <span class="badge bg-success mx-1">SAVE10</span> - 10% off on any order
+    <br><small>Enter the code at checkout to apply discount.</small>
+</div>
+
 <h3>Best Selling Books</h3>
 <div class="row">
     <?php
