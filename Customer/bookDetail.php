@@ -12,7 +12,6 @@ if (!$book) {
     die("Book not found.");
 }
 
-// Handle add to cart
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
     $qty = intval($_POST['quantity']);
@@ -24,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     }
 }
 
-// Handle review submission (with anonymous option)
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && isset($_SESSION['user_id'])) {
     $rating = intval($_POST['rating']);
     $comment = trim($_POST['comment']);
@@ -35,8 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && is
                             ON DUPLICATE KEY UPDATE rating = ?, comment = ?, is_anonymous = ?");
     $stmt->execute([$book_id, $_SESSION['user_id'], $rating, $comment, $is_anonymous, 
                     $rating, $comment, $is_anonymous]);
-    
-    // Recalculate average rating
+
     $avgStmt = $pdo->prepare("SELECT AVG(rating) as avg, COUNT(*) as cnt FROM reviews WHERE book_id = ?");
     $avgStmt->execute([$book_id]);
     $data = $avgStmt->fetch();
@@ -45,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && is
     exit;
 }
 
-// Fetch reviews (including is_anonymous)
 $reviewsStmt = $pdo->prepare("SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.book_id = ? ORDER BY r.created_at DESC");
 $reviewsStmt->execute([$book_id]);
 $reviews = $reviewsStmt->fetchAll();
