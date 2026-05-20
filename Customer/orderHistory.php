@@ -5,7 +5,10 @@ require_once '../Customize&Database/access.php';
 requireLogin();
 
 $userId = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT id, order_number, total_amount, discount_amount, voucher_code, status, payment_status, payment_proof, order_date FROM orders WHERE user_id = ? ORDER BY order_date DESC");
+$stmt = $pdo->prepare("SELECT id, order_number, total_amount, discount_amount, voucher_code, status, payment_status, payment_proof, order_date, shipped_date 
+                       FROM orders 
+                       WHERE user_id = ? 
+                       ORDER BY order_date DESC");
 $stmt->execute([$userId]);
 $orders = $stmt->fetchAll();
 
@@ -37,6 +40,7 @@ if (isset($_SESSION['flash_error'])) {
                     <th>Final Total</th>
                     <th>Voucher</th>
                     <th>Status</th>
+                    <th>Shipped Date</th>
                     <th>Payment</th>
                     <th>Proof</th>
                     <th>Action</th>
@@ -58,6 +62,9 @@ if (isset($_SESSION['flash_error'])) {
                         <span class="badge bg-<?= $order['status'] == 'completed' ? 'success' : ($order['status'] == 'cancelled' ? 'danger' : 'warning') ?>">
                             <?= ucfirst($order['status']) ?>
                         </span>
+                    </td>
+                    <td>
+                        <?= $order['shipped_date'] ? date('d M Y', strtotime($order['shipped_date'])) : '-' ?>
                     </td>
                     <td><?= ucfirst($order['payment_status']) ?></td>
                     <td>
