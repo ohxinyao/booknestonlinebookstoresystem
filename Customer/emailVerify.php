@@ -9,9 +9,9 @@ if ($token) {
         $update = $pdo->prepare("UPDATE users SET email_verified = 1, verification_token = NULL WHERE id = ?");
         $update->execute([$user['id']]);
         if ($user['role'] == 'admin') {
-            $loginLink = "../Admin/admin_login.php";
+            $loginLink = "../Admin/adminLogin.php";
         } elseif ($user['role'] == 'staff') {
-            $loginLink = "../Staff/staff_login.php";
+            $loginLink = "../Staff/staffLogin.php";
         } else {
             $loginLink = "login.php";
         }
