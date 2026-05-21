@@ -16,6 +16,25 @@ if (isset($_SESSION['flash_error'])) {
     unset($_SESSION['flash_error']);
 }
 
+if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_POST['stock_delta'])) {
+    $book_id = (int)$_POST['book_id'];
+    $delta = (int)$_POST['stock_delta'];
+    if ($delta != 0) {
+        $stmt = $pdo->prepare("SELECT stock FROM books WHERE id = ?");
+        $stmt->execute([$book_id]);
+        $current = (int)$stmt->fetchColumn();
+        $new_stock = $current + $delta;
+        if ($new_stock < 0) $new_stock = 0;
+        $update = $pdo->prepare("UPDATE books SET stock = ? WHERE id = ?");
+        $update->execute([$new_stock, $book_id]);
+        $_SESSION['flash_success'] = "Stock updated: " . ($delta > 0 ? '+' : '') . "$delta → New stock: $new_stock";
+    } else {
+        $_SESSION['flash_error'] = "No change (book added = 0).";
+    }
+    header("Location: manageBook.php");
+    exit;
+}
+
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
     $stmt = $pdo->prepare("DELETE FROM books WHERE id = ?");
@@ -32,22 +51,30 @@ if (isset($_GET['edit'])) {
     $editBook = $stmt->fetch();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['quick_update_stock'])) {
     $title = trim($_POST['title']);
     $author = trim($_POST['author']);
     $description = trim($_POST['description']);
     $category = trim($_POST['category']);
     $price = (float)$_POST['price'];
-    $stock = (int)$_POST['stock'];
     $min_stock = isset($_POST['min_stock']) ? (int)$_POST['min_stock'] : 5;
-
+    $stock = 0;
     $book_id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+
     $image = 'default.jpg';
     if ($book_id > 0) {
-        $stmt = $pdo->prepare("SELECT image FROM books WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT image, stock FROM books WHERE id = ?");
         $stmt->execute([$book_id]);
-        $orig = $stmt->fetchColumn();
-        if ($orig && $orig != '') $image = $orig;
+        $orig = $stmt->fetch();
+        if ($orig) {
+            $image = $orig['image'];
+            $stock = $orig['stock']; 
+        }
+    } else {
+        if (isset($_POST['stock'])) {
+            $stock = (int)$_POST['stock'];
+            if ($stock < 0) $stock = 0;
+        }
     }
 
     if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
@@ -95,46 +122,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 $books = $pdo->query("SELECT * FROM books ORDER BY id ASC")->fetchAll();
+$dbCategories = $pdo->query("SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != ''")->fetchAll(PDO::FETCH_COLUMN);
+$defaultCategories = ['Fiction', 'Non-fiction', 'Children', 'Education & Reference', 'Science & Technology', 'Business & Finance', 'Lifestyle (Health, Cooking, Arts)'];
+$allCategories = array_unique(array_merge($defaultCategories, $dbCategories));
+sort($allCategories);
 ?>
 <style>
-    .table-hover tbody tr:hover {
-        background-color: #f8f9fa;
-        transition: background-color 0.2s ease;
-    }
-    .book-thumb {
-        width: 50px;
-        height: 50px;
-        object-fit: cover;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        border: 1px solid #dee2e6;
-    }
-    .btn i {
-        margin-right: 5px;
-    }
-    .modal .form-control, .modal .form-select {
-        border-radius: 8px;
-    }
-    .modal .form-label {
-        font-weight: 500;
-        margin-bottom: 0.25rem;
-    }
-    #imagePreviewContainer {
-        margin-top: 10px;
-        padding: 8px;
-        background: #f1f3f5;
-        border-radius: 12px;
-        display: inline-block;
-    }
-    #imagePreview {
-        max-width: 120px;
-        max-height: 120px;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    .low-stock {
-        background-color: #fff3cd !important;
-    }
+    .table-hover tbody tr:hover { background-color: #f8f9fa; transition: 0.2s; }
+    .book-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #dee2e6; }
+    .btn i { margin-right: 5px; }
+    .modal .form-control, .modal .form-select { border-radius: 8px; }
+    .modal .form-label { font-weight: 500; margin-bottom: 0.25rem; }
+    #imagePreviewContainer { margin-top: 10px; padding: 8px; background: #f1f3f5; border-radius: 12px; display: inline-block; }
+    #imagePreview { max-width: 120px; max-height: 120px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .low-stock { background-color: #fff3cd !important; }
+    .quick-stock-form { display: flex; gap: 5px; align-items: center; }
+    .quick-stock-form input { width: 80px; }
 </style>
 
 <h2>Manage Books</h2>
@@ -150,31 +153,32 @@ $books = $pdo->query("SELECT * FROM books ORDER BY id ASC")->fetchAll();
                 <th>Title</th>
                 <th>Author</th>
                 <th>Price</th>
-                <th>Stock</th>
+                <th>Latest Stock</th>
                 <th>Min Stock</th>
+                <th>New Stock (+/−)</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-        <?php $sn = 1; ?>
-        <?php foreach ($books as $book): 
+        <?php $sn = 1; foreach ($books as $book): 
             $isLowStock = ($book['stock'] <= $book['min_stock']);
         ?>
             <tr class="<?= $isLowStock ? 'low-stock' : '' ?>">
                 <td><?= $sn++ ?></td>
-                <td>
-                    <img src="<?= htmlspecialchars($book['image']) ?>" class="book-thumb" alt="Book cover"
-                         onerror="this.src='/finalproject/booknestonlinebookstoresystem/Image/default.jpg'; this.style.opacity='0.7';">
-                </td>
+                <td><img src="<?= htmlspecialchars($book['image']) ?>" class="book-thumb" onerror="this.src='/finalproject/booknestonlinebookstoresystem/Image/default.jpg'; this.style.opacity='0.7';"></td>
                 <td><?= htmlspecialchars($book['title']) ?></td>
                 <td><?= htmlspecialchars($book['author']) ?></td>
                 <td>RM <?= number_format($book['price'],2) ?></td>
-                <td>
-                    <span class="badge <?= $isLowStock ? 'bg-danger' : 'bg-secondary' ?>">
-                        <?= $book['stock'] ?>
-                    </span>
-                </td>
+                <td><span class="badge <?= $isLowStock ? 'bg-danger' : 'bg-secondary' ?>"><?= $book['stock'] ?></span></td>
                 <td><?= $book['min_stock'] ?></td>
+                <td>
+                    <form method="POST" class="quick-stock-form">
+                        <input type="hidden" name="book_id" value="<?= $book['id'] ?>">
+                        <input type="number" name="stock_delta" value="0" placeholder="+/-" class="form-control form-control-sm" required>
+                        <button type="submit" name="quick_update_stock" class="btn btn-sm btn-outline-primary">Update</button>
+                    </form>
+                 </div>
+                </td>
                 <td>
                     <div class="d-flex gap-2">
                         <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="editBook(<?= htmlspecialchars(json_encode($book)) ?>); return false;">
@@ -184,7 +188,8 @@ $books = $pdo->query("SELECT * FROM books ORDER BY id ASC")->fetchAll();
                             <i class="fas fa-trash-alt"></i> Delete
                         </a>
                     </div>
-                </td>
+                 </div>
+                </tr>
             </tr>
         <?php endforeach; ?>
         </tbody>
@@ -216,25 +221,27 @@ $books = $pdo->query("SELECT * FROM books ORDER BY id ASC")->fetchAll();
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Category</label>
-                            <input type="text" name="category" id="category" class="form-control">
+                            <select name="category" id="category" class="form-select">
+                                <?php foreach ($allCategories as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Price (RM) <span class="text-danger">*</span></label>
                             <input type="number" step="0.01" name="price" id="price" class="form-control" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Stock <span class="text-danger">*</span></label>
-                            <input type="number" name="stock" id="stock" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
                             <label class="form-label">Min Stock Threshold</label>
                             <input type="number" name="min_stock" id="min_stock" class="form-control" value="5">
-                            <small class="text-muted">Alert when stock falls below this value.</small>
+                        </div>
+                        <div class="col-md-4" id="stockFieldRow">
+                            <label class="form-label">Initial Stock</label>
+                            <input type="number" name="stock" id="stock" class="form-control" value="0" min="0">
                         </div>
                         <div class="col-12">
                             <label class="form-label">Cover Image</label>
                             <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/gif" id="imageInput">
-                            <small class="text-muted">Leave empty to keep current image.</small>
                             <div id="imagePreviewContainer" class="mt-2 text-center" style="display: none;">
                                 <img id="imagePreview" src="#" class="img-thumbnail" style="max-height: 120px;">
                             </div>
@@ -256,10 +263,11 @@ function clearForm() {
     document.getElementById('title').value = '';
     document.getElementById('author').value = '';
     document.getElementById('description').value = '';
-    document.getElementById('category').value = '';
+    document.getElementById('category').selectedIndex = 0;
     document.getElementById('price').value = '';
-    document.getElementById('stock').value = '';
     document.getElementById('min_stock').value = '5';
+    document.getElementById('stock').value = '0';
+    document.getElementById('stockFieldRow').style.display = 'block';
     document.getElementById('imagePreviewContainer').style.display = 'none';
     document.getElementById('imagePreview').src = '';
 }
@@ -268,15 +276,20 @@ function editBook(book) {
     document.getElementById('title').value = book.title;
     document.getElementById('author').value = book.author;
     document.getElementById('description').value = book.description || '';
-    document.getElementById('category').value = book.category || '';
+    let categorySelect = document.getElementById('category');
+    for (let i = 0; i < categorySelect.options.length; i++) {
+        if (categorySelect.options[i].value === book.category) {
+            categorySelect.selectedIndex = i;
+            break;
+        }
+    }
     document.getElementById('price').value = book.price;
-    document.getElementById('stock').value = book.stock;
     document.getElementById('min_stock').value = book.min_stock || 5;
+    document.getElementById('stockFieldRow').style.display = 'none';
     let imgSrc = (book.image && book.image !== 'default.jpg') ? book.image : '/finalproject/booknestonlinebookstoresystem/Image/default.jpg';
     document.getElementById('imagePreview').src = imgSrc;
     document.getElementById('imagePreviewContainer').style.display = 'block';
 }
-
 document.getElementById('imageInput')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
