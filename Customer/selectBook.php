@@ -72,7 +72,16 @@ $categories = $catStmt->fetchAll();
     <?php if (count($books) == 0): ?>
         <div class="col-12"><div class="alert alert-info">No books found.</div></div>
     <?php else: ?>
-        <?php foreach ($books as $book): ?>
+        <?php foreach ($books as $book):
+            $stock = $book['stock'];
+            if ($stock <= 0) {
+                $stockHtml = '<p class="text-danger fw-bold mb-0"><i class="fas fa-times-circle"></i> Out of Stock</p>';
+            } elseif ($stock <= 5) {
+                $stockHtml = '<p class="text-warning fw-bold mb-0"><i class="fas fa-exclamation-triangle"></i> Only ' . $stock . ' left!</p>';
+            } else {
+                $stockHtml = '<p class="text-muted mb-0"><i class="fas fa-box"></i> In Stock: ' . $stock . '</p>';
+            }
+        ?>
         <div class="col-md-3 mb-4">
             <div class="card h-100 book-card">
                 <img src="<?= htmlspecialchars($book['image']) ?>" class="card-img-top" style="height:200px; object-fit:cover;">
@@ -80,7 +89,8 @@ $categories = $catStmt->fetchAll();
                     <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
                     <p class="card-text">by <?= htmlspecialchars($book['author']) ?></p>
                     <p class="card-text"><strong>RM <?= number_format($book['price'], 2) ?></strong></p>
-                    <p class="card-text"><small class="star-rating">★ <?= number_format($book['rating_avg'],1) ?></small> (<?= $book['rating_count'] ?> reviews)</p>
+                    <?= $stockHtml ?>
+                    <p class="card-text mt-2"><small class="star-rating">★ <?= number_format($book['rating_avg'],1) ?></small> (<?= $book['rating_count'] ?> reviews)</p>
                     <a href="bookDetail.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
                 </div>
             </div>
