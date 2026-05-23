@@ -45,6 +45,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && is
 $reviewsStmt = $pdo->prepare("SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.book_id = ? ORDER BY r.created_at DESC");
 $reviewsStmt->execute([$book_id]);
 $reviews = $reviewsStmt->fetchAll();
+
+$stock = $book['stock'];
+if ($stock <= 0) {
+    $stockBadge = '<span class="badge bg-danger">Out of Stock</span>';
+} elseif ($stock <= 5) {
+    $stockBadge = '<span class="badge bg-warning text-dark">Low Stock: ' . $stock . ' left</span>';
+} else {
+    $stockBadge = '<span class="badge bg-success">In Stock: ' . $stock . '</span>';
+}
 ?>
 <div class="mb-3">
     <a href="selectBook.php" class="btn btn-outline-secondary">
@@ -61,7 +70,7 @@ $reviews = $reviewsStmt->fetchAll();
         <p><strong>Author:</strong> <?= htmlspecialchars($book['author']) ?></p>
         <p><strong>Category:</strong> <?= htmlspecialchars($book['category']) ?></p>
         <p><strong>Price:</strong> RM <?= number_format($book['price'], 2) ?></p>
-        <p><strong>Stock:</strong> <?= $book['stock'] ?> available</p>
+        <p><strong>Stock:</strong> <?= $stockBadge ?></p>
         <div class="mb-2">
             <span class="star-rating">★ <?= number_format($book['rating_avg'], 1) ?> / 5</span> (<?= $book['rating_count'] ?> reviews)
         </div>
@@ -82,7 +91,7 @@ $reviews = $reviewsStmt->fetchAll();
                 <?php if (isset($error)) echo '<div class="alert alert-danger mt-2">' . $error . '</div>'; ?>
             </form>
 
-            <form method="POST" action="addWishlist.php" class="mt-2">
+            <form method="POST" action="addWishList.php" class="mt-2">
                 <input type="hidden" name="book_id" value="<?= $book['id'] ?>">
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="far fa-heart"></i> Add to Wishlist
@@ -90,7 +99,7 @@ $reviews = $reviewsStmt->fetchAll();
             </form>
             <?php if ($wishlist_success): ?>
                 <div class="alert alert-success mt-2">
-                    Added to wishlist! <a href="wishlist.php">View wishlist</a>
+                    Added to wishlist! <a href="wishList.php">View wishlist</a>
                 </div>
             <?php endif; ?>
         <?php endif; ?>
