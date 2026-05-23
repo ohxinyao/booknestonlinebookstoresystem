@@ -29,7 +29,7 @@ if (!empty($_SESSION['wishlist'])) {
                     <p>RM <?= number_format($book['price'],2) ?></p>
                     <div class="mt-auto d-flex justify-content-between gap-2">
                         <a href="bookDetail.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-primary flex-fill">View Details</a>
-                        <a href="removeWishlist.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-danger flex-fill confirm-delete">Remove</a>
+                        <a href="removeWishList.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-danger flex-fill confirm-delete">Remove</a>
                     </div>
                 </div>
             </div>
