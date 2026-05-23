@@ -28,8 +28,13 @@ if (!empty($_SESSION['cart'])) {
 include '../Customize&Database/header.php';
 ?>
 <h2>Shopping Cart</h2>
+<div class="mb-3">
+    <a href="selectBook.php" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Continue Shopping
+    </a>
+</div>
 <?php if (empty($cartItems)): ?>
-    <div class="alert alert-info">Your cart is empty. <a href="../Customer/index.php">Continue shopping</a></div>
+    <div class="alert alert-info">Your cart is empty. <a href="index.php">Start shopping</a></div>
 <?php else: ?>
     <div class="table-responsive">
         <table class="table table-bordered">
@@ -62,7 +67,7 @@ include '../Customize&Database/header.php';
             <?php endforeach; ?>
             </tbody>
             <tfoot>
-                <tr><th colspan="3" class="text-end">Total:</th><th>RM <?= number_format($total,2) ?></th><td></td></tr>
+                <tr><th colspan="3" class="text-end">Total:</th><th>RM <?= number_format($total,2) ?></th><td></tr>
             </tfoot>
         </table>
     </div>
