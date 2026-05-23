@@ -22,7 +22,6 @@ include '../Customize&Database/header.php';
                         </div>
                     </div>
                 </div>
-  
                 <div class="carousel-item">
                     <div class="position-relative text-white p-5 text-center voucher-bg-2" style="min-height: 300px; background-size: cover; background-position: center;">
                         <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
@@ -32,7 +31,6 @@ include '../Customize&Database/header.php';
                         </div>
                     </div>
                 </div>
-          
                 <div class="carousel-item">
                     <div class="position-relative text-white p-5 text-center voucher-bg-3" style="min-height: 300px; background-size: cover; background-position: center;">
                         <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
@@ -68,6 +66,14 @@ include '../Customize&Database/header.php';
     <?php
     $bestStmt = $pdo->query("SELECT * FROM books ORDER BY sales DESC LIMIT 4");
     while ($bestseller = $bestStmt->fetch(PDO::FETCH_ASSOC)):
+        $stock = $bestseller['stock'];
+        if ($stock <= 0) {
+            $stockHtml = '<p class="text-danger fw-bold mb-0"><i class="fas fa-times-circle"></i> Out of Stock</p>';
+        } elseif ($stock <= 5) {
+            $stockHtml = '<p class="text-warning fw-bold mb-0"><i class="fas fa-exclamation-triangle"></i> Only ' . $stock . ' left!</p>';
+        } else {
+            $stockHtml = '<p class="text-muted mb-0"><i class="fas fa-box"></i> In Stock: ' . $stock . '</p>';
+        }
     ?>
     <div class="col-md-3 mb-4">
         <div class="card h-100 book-card">
@@ -75,7 +81,8 @@ include '../Customize&Database/header.php';
             <div class="card-body">
                 <h5 class="card-title"><?= htmlspecialchars($bestseller['title']) ?></h5>
                 <p class="card-text">RM <?= number_format($bestseller['price'], 2) ?></p>
-                <p class="card-text text-muted small"><i class="fas fa-chart-line"></i> Sold: <?= (int)$bestseller['sales'] ?> books</p>
+                <?= $stockHtml ?>
+                <p class="card-text text-muted small mt-2"><i class="fas fa-chart-line"></i> Sold: <?= (int)$bestseller['sales'] ?> books</p>
                 <a href="bookDetail.php?id=<?= $bestseller['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
             </div>
         </div>
@@ -88,6 +95,14 @@ include '../Customize&Database/header.php';
     <?php
     $stmt = $pdo->query("SELECT * FROM books ORDER BY created_at DESC LIMIT 4");
     while ($book = $stmt->fetch(PDO::FETCH_ASSOC)):
+        $stock = $book['stock'];
+        if ($stock <= 0) {
+            $stockHtml = '<p class="text-danger fw-bold mb-0"><i class="fas fa-times-circle"></i> Out of Stock</p>';
+        } elseif ($stock <= 5) {
+            $stockHtml = '<p class="text-warning fw-bold mb-0"><i class="fas fa-exclamation-triangle"></i> Only ' . $stock . ' left!</p>';
+        } else {
+            $stockHtml = '<p class="text-muted mb-0"><i class="fas fa-box"></i> In Stock: ' . $stock . '</p>';
+        }
     ?>
     <div class="col-md-3 mb-4">
         <div class="card h-100 book-card">
@@ -95,6 +110,7 @@ include '../Customize&Database/header.php';
             <div class="card-body">
                 <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
                 <p class="card-text">RM <?= number_format($book['price'], 2) ?></p>
+                <?= $stockHtml ?>
                 <a href="bookDetail.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
             </div>
         </div>
