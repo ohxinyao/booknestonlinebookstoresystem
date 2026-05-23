@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BookNest - Online Bookstore</title>
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/finalproject/booknestonlinebookstoresystem/Customize&Database/design.css">
@@ -12,6 +11,8 @@
 <body>
 
 <?php
+require_once __DIR__ . '/setDatabase.php';
+
 $navbarColor = 'bg-dark';
 if (isset($_SESSION['user_role'])) {
     if ($_SESSION['user_role'] == 'staff') {
@@ -35,7 +36,21 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/shoppingCart.php"><i class="fas fa-shopping-cart"></i> Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/orderHistory.php"><i class="fas fa-box"></i> My Orders</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/wishList.php"><i class="fas fa-heart"></i> Wishlist</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/notification.php"><i class="fas fa-bell"></i> Notifications</a></li>
+                    <li class="nav-item position-relative">
+                        <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/notification.php">
+                            <i class="fas fa-bell"></i> Notifications
+                            <?php
+                            if (isset($_SESSION['user_id'])) {
+                                $notifCount = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
+                                $notifCount->execute([$_SESSION['user_id']]);
+                                $unread = $notifCount->fetchColumn();
+                                if ($unread > 0) {
+                                    echo '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">' . $unread . '</span>';
+                                }
+                            }
+                            ?>
+                        </a>
+                    </li>
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'staff'): ?>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php"><i class="fas fa-dashboard"></i>Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/bookManage.php"><i class="fas fa-book"></i> Manage Books</a></li>
@@ -62,19 +77,19 @@ if (isset($_SESSION['user_role'])) {
                         </ul>
                     </li>
                <?php else: ?>
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Login
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
-            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/login.php">Customer Login</a></li>
-            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php">Login as admin</a></li>
-            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php">Login as staff</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/register.php">Register as customer</a></li>
-        </ul>
-    </li>
-<?php endif; ?>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" role="button" data-bs-toggle="dropdown">
+                            Login
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/login.php">Customer Login</a></li>
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php">Login as admin</a></li>
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Staff/staffLogin.php">Login as staff</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/register.php">Register as customer</a></li>
+                        </ul>
+                    </li>
+                <?php endif; ?>
             </ul>
         </div>
     </div>
