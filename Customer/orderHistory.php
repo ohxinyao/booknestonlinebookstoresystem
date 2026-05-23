@@ -74,11 +74,20 @@ if (isset($_SESSION['flash_error'])) {
                             Not uploaded
                         <?php endif; ?>
                     </td>
-                    <td>
+                    <td class="align-middle">
+                        <div class="d-flex gap-2 flex-wrap">
                         <?php if ($order['payment_status'] == 'unpaid' && $order['status'] != 'cancelled'): ?>
-                            <a href="uploadPayment.php?order_id=<?= $order['id'] ?>" class="btn btn-sm btn-primary">Upload Payment</a>
+                            <a href="uploadPayment.php?order_id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-upload"></i> Pay
+                            </a>
                         <?php endif; ?>
-                     </div>
+        
+                        <?php if ($order['status'] == 'pending' && $order['payment_status'] == 'unpaid'): ?>
+                            <a href="cancelOrder.php?order_id=<?= $order['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Cancel this order?')">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                         <?php endif; ?>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
