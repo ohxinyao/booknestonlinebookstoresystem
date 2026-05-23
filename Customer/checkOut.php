@@ -175,7 +175,7 @@ document.getElementById('apply_voucher').addEventListener('click', function() {
         document.getElementById('voucher_message').innerHTML = '<div class="alert alert-warning">Please enter a code.</div>';
         return;
     }
-    fetch('checkout.php?check_voucher=1&code=' + encodeURIComponent(code))
+    fetch('checkOut.php?check_voucher=1&code=' + encodeURIComponent(code))
         .then(response => response.json())
         .then(data => {
             if (data.valid) {
