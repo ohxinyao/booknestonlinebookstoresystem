@@ -83,7 +83,7 @@ if (isset($_SESSION['flash_success'])) {
 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#staffModal" onclick="clearForm()">Add New Staff</button>
 <table class="table table-bordered">
     <thead>
-        <tr><th>#</th><th>Name</th><th>Email</th><th>Created At</th><th>Actions</th></tr>
+        <tr><th>Staff ID</th><th>Name</th><th>Email</th><th>Created At</th><th>Actions</th></tr>
     </thead>
     <tbody>
         <?php $sn = 1; ?>
@@ -103,7 +103,6 @@ if (isset($_SESSION['flash_success'])) {
     </tbody>
 </table>
 
-<!-- Modal for Add/Edit -->
 <div class="modal fade" id="staffModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
