@@ -24,6 +24,12 @@ if (isset($_SESSION['flash_error'])) {
 }
 ?>
 
+<div class="mb-3">
+    <a href="selectBook.php" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Continue Shopping
+    </a>
+</div>
+
 <h2>My Orders</h2>
 
 <?php if (count($orders) == 0): ?>
