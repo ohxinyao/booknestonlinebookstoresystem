@@ -57,7 +57,6 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffManage.php"><i class="fas fa-box"></i> Orders</a></li>
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin'): ?>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/mainPage.php"><i class="fas fa-user-shield"></i> Admin</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manage_users.php"><i class="fas fa-users"></i> Users</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Update Books</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageOrder.php"><i class="fas fa-box"></i> Orders</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageStaff.php"><i class="fas fa-user"></i> Manage Staff</a></li>
