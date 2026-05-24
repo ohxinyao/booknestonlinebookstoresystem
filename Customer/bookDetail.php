@@ -50,7 +50,7 @@ $stock = $book['stock'];
 if ($stock <= 0) {
     $stockBadge = '<span class="badge bg-danger">Out of Stock</span>';
 } elseif ($stock <= 5) {
-    $stockBadge = '<span class="badge bg-warning text-dark">Low Stock: ' . $stock . ' left</span>';
+    $stockBadge = '<span class="badge bg-warning text-dark">Low Stock: ' . $stock . ' book left</span>';
 } else {
     $stockBadge = '<span class="badge bg-success">In Stock: ' . $stock . '</span>';
 }
