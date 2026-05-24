@@ -27,12 +27,14 @@ if (!empty($_SESSION['cart'])) {
 }
 include '../Customize&Database/header.php';
 ?>
-<h2>Shopping Cart</h2>
 <div class="mb-3">
     <a href="selectBook.php" class="btn btn-outline-secondary">
         <i class="fas fa-arrow-left"></i> Continue Shopping
     </a>
 </div>
+
+<h2>Shopping Cart</h2>
+
 <?php if (empty($cartItems)): ?>
     <div class="alert alert-info">Your cart is empty. <a href="index.php">Start shopping</a></div>
 <?php else: ?>
