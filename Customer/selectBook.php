@@ -90,7 +90,7 @@ $categories = $catStmt->fetchAll();
                     <p class="card-text">by <?= htmlspecialchars($book['author']) ?></p>
                     <p class="card-text"><strong>RM <?= number_format($book['price'], 2) ?></strong></p>
                     <?= $stockHtml ?>
-                    <p class="card-text mt-2"><small class="star-rating">★ <?= number_format($book['rating_avg'],1) ?></small> (<?= $book['rating_count'] ?> reviews)</p>
+                    <p class="card-text mt-2"><small class="star-rating"><i class="fas fa-star"></i> <?= number_format($book['rating_avg'],1) ?></small> (<?= $book['rating_count'] ?> reviews)</p>
                     <a href="bookDetail.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
                 </div>
             </div>
