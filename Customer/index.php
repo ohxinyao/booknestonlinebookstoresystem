@@ -16,17 +16,17 @@ include '../Customize&Database/header.php';
                 <div class="carousel-item active">
                     <div class="position-relative text-white p-5 text-center voucher-bg-1" style="min-height: 300px; background-size: cover; background-position: center;">
                         <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
-                            <h2 class="display-5 fw-bold">🎉 20% OFF on Fiction Books!</h2>
+                            <h2 class="display-5 fw-bold"><i class="fas fa-tags me-2"></i>20% OFF on Fiction Books!</h2>
                             <p class="lead">Use code: <span class="badge bg-light text-dark fs-6 px-3 py-2 mt-2">BOOKNEST20</span></p>
-                            <p class="mt-3">Exclusively online – limited time offer</p>
+                            <p class="mt-3">Exclusively online - limited time offer</p>
                         </div>
                     </div>
                 </div>
                 <div class="carousel-item">
                     <div class="position-relative text-white p-5 text-center voucher-bg-2" style="min-height: 300px; background-size: cover; background-position: center;">
                         <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
-                            <h2 class="display-5 fw-bold">📦 Free Shipping on Orders > RM50</h2>
-                            <p class="lead">Nationwide delivery – no hidden fees</p>
+                            <h2 class="display-5 fw-bold"><i class="fas fa-truck-fast me-2"></i>Free Shipping on Orders &gt; RM50</h2>
+                            <p class="lead">Nationwide delivery - no hidden fees</p>
                             <p class="mt-3">Valid until the end of this month</p>
                         </div>
                     </div>
@@ -34,7 +34,7 @@ include '../Customize&Database/header.php';
                 <div class="carousel-item">
                     <div class="position-relative text-white p-5 text-center voucher-bg-3" style="min-height: 300px; background-size: cover; background-position: center;">
                         <div class="d-flex flex-column justify-content-center h-100" style="background-color: rgba(0,0,0,0.45); border-radius: inherit;">
-                            <h2 class="display-5 fw-bold">⭐ New Member? Get 10% off!</h2>
+                            <h2 class="display-5 fw-bold"><i class="fas fa-star me-2"></i>New Member? Get 10% off!</h2>
                             <p class="lead">Welcome voucher for your first purchase</p>
                             <p class="mt-3">Sign up now and save</p>
                         </div>
@@ -54,7 +54,7 @@ include '../Customize&Database/header.php';
 </div>
 
 <div class="alert alert-info text-center mb-4" role="alert">
-    <strong>🎁 Available Vouchers:</strong> 
+    <strong><i class="fas fa-ticket-alt me-1"></i> Available Vouchers:</strong> 
     <span class="badge bg-success mx-1">BOOKNEST20</span> - 20% off on Fiction Books &nbsp;|&nbsp;
     <span class="badge bg-success mx-1">WELCOME10</span> - 10% off (new members) &nbsp;|&nbsp;
     <span class="badge bg-success mx-1">SAVE10</span> - 10% off on any order
