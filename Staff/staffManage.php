@@ -102,7 +102,6 @@ if (isset($_SESSION['flash_error'])) {
     </table>
 </div>
 
-<!-- Reject Order Modal (保持不变) -->
 <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
