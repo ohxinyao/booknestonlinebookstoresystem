@@ -1,8 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 session_start();
 require_once '../Customize&Database/access.php';
 requireRole('admin');
-require_once '../Customize&Database/setDatabase.php';
 require_once '../Customize&Database/function.php';
 include '../Customize&Database/header.php';
 
@@ -15,140 +16,290 @@ if (isset($_SESSION['flash_error'])) {
     unset($_SESSION['flash_error']);
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
-    $orderId = (int)$_POST['order_id'];
-    $newStatus = $_POST['status'];
-    $allowed = ['pending', 'paid', 'processing', 'shipped', 'completed', 'cancelled'];
-    if (!in_array($newStatus, $allowed)) {
-        $_SESSION['flash_error'] = "Invalid status value.";
-        header("Location: manageOrder.php");
-        exit;
+if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_POST['stock_delta'])) {
+    $book_id = (int)$_POST['book_id'];
+    $delta = (int)$_POST['stock_delta'];
+    if ($delta != 0) {
+        $stmt = $pdo->prepare("SELECT stock FROM books WHERE id = ?");
+        $stmt->execute([$book_id]);
+        $current = (int)$stmt->fetchColumn();
+        $new_stock = $current + $delta;
+        if ($new_stock < 0) $new_stock = 0;
+        $update = $pdo->prepare("UPDATE books SET stock = ? WHERE id = ?");
+        $update->execute([$new_stock, $book_id]);
+        $_SESSION['flash_success'] = "Stock updated: " . ($delta > 0 ? '+' : '') . "$delta → New stock: $new_stock";
+    } else {
+        $_SESSION['flash_error'] = "No change (book added = 0).";
     }
-
-    $pdo->beginTransaction();
-    try {
-        $orderInfo = $pdo->prepare("SELECT * FROM orders WHERE id = ? FOR UPDATE");
-        $orderInfo->execute([$orderId]);
-        $order = $orderInfo->fetch();
-        if (!$order) {
-            throw new Exception("Order not found.");
-        }
-
-        $shipped_date = null;
-        if ($newStatus == 'shipped' && is_null($order['shipped_date'])) {
-            $shipped_date = date('Y-m-d H:i:s');
-            $updateStmt = $pdo->prepare("UPDATE orders SET status = ?, shipped_date = ? WHERE id = ?");
-            $updateStmt->execute([$newStatus, $shipped_date, $orderId]);
-        } else {
-            $updateStmt = $pdo->prepare("UPDATE orders SET status = ? WHERE id = ?");
-            $updateStmt->execute([$newStatus, $orderId]);
-        }
-
-        $userStmt = $pdo->prepare("SELECT id, name, email FROM users WHERE id = ?");
-        $userStmt->execute([$order['user_id']]);
-        $user = $userStmt->fetch();
-
-        if ($user) {
-            $subject = "Your order #{$order['order_number']} status updated to {$newStatus}";
-            $body = "Dear {$user['name']},<br><br>Your order status has been updated to: <strong>{$newStatus}</strong>.<br>";
-            if ($newStatus == 'shipped' && $shipped_date) {
-                $body .= "Your books have been shipped on " . date('d M Y H:i', strtotime($shipped_date)) . ".<br>";
-            }
-            $body .= "You can track your order in your account.<br><br>Thank you for shopping with BookNest.";
-            sendEmail($user['email'], $subject, $body);
-
-            $notifMsg = "Your order #{$order['order_number']} status is now {$newStatus}.";
-            if ($newStatus == 'shipped' && $shipped_date) {
-                $notifMsg .= " It was shipped on " . date('d M Y', strtotime($shipped_date)) . ".";
-            }
-            $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)");
-            $notifStmt->execute([$user['id'], $orderId, $notifMsg]);
-        }
-
-        $pdo->commit();
-        $_SESSION['flash_success'] = "Order status updated successfully. Customer has been notified.";
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        $_SESSION['flash_error'] = "Update failed: " . $e->getMessage();
-    }
-    header("Location: manageOrder.php");
+    header("Location: manageBook.php");
     exit;
 }
 
-$orders = $pdo->query("
-    SELECT o.*, u.name as user_name 
-    FROM orders o 
-    JOIN users u ON o.user_id = u.id 
-    ORDER BY o.order_date DESC
-")->fetchAll();
-?>
+if (isset($_GET['delete'])) {
+    $id = (int)$_GET['delete'];
+    $stmt = $pdo->prepare("DELETE FROM books WHERE id = ?");
+    $stmt->execute([$id]);
+    $_SESSION['flash_success'] = "Book deleted successfully.";
+    header("Location: manageBook.php");
+    exit;
+}
 
-<h2>Manage Orders</h2>
+$editBook = null;
+if (isset($_GET['edit'])) {
+    $stmt = $pdo->prepare("SELECT * FROM books WHERE id = ?");
+    $stmt->execute([(int)$_GET['edit']]);
+    $editBook = $stmt->fetch();
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['quick_update_stock'])) {
+    $title = trim($_POST['title']);
+    $author = trim($_POST['author']);
+    $description = trim($_POST['description']);
+    $category = trim($_POST['category']);
+    $price = (float)$_POST['price'];
+    $min_stock = isset($_POST['min_stock']) ? (int)$_POST['min_stock'] : 5;
+    $stock = 0;
+    $book_id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+
+    $image = 'default.jpg';
+    if ($book_id > 0) {
+        $stmt = $pdo->prepare("SELECT image, stock FROM books WHERE id = ?");
+        $stmt->execute([$book_id]);
+        $orig = $stmt->fetch();
+        if ($orig) {
+            $image = $orig['image'];
+            $stock = $orig['stock']; 
+        }
+    } else {
+        if (isset($_POST['stock'])) {
+            $stock = (int)$_POST['stock'];
+            if ($stock < 0) $stock = 0;
+        }
+    }
+
+    if (isset($_FILES['image']) && $_FILES['image']['error'] == UPLOAD_ERR_OK) {
+        $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/finalproject/booknestonlinebookstoresystem/Image/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+        $ext = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+        if (in_array($ext, $allowed)) {
+            $filename = time() . '_' . rand(100, 999) . '.' . $ext;
+            $targetFile = $uploadDir . $filename;
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $targetFile)) {
+                if ($image != 'default.jpg' && file_exists($uploadDir . basename($image))) {
+                    @unlink($uploadDir . basename($image));
+                }
+                $image = '/finalproject/booknestonlinebookstoresystem/Image/' . $filename;
+            } else {
+                $_SESSION['flash_error'] = "Failed to upload image.";
+                header("Location: manageBook.php");
+                exit;
+            }
+        } else {
+            $_SESSION['flash_error'] = "Invalid image format. Only JPG, PNG, GIF allowed.";
+            header("Location: manageBook.php");
+            exit;
+        }
+    }
+
+    if (empty($title) || empty($author) || $price <= 0) {
+        $_SESSION['flash_error'] = "Title, author and positive price are required.";
+        header("Location: manageBook.php");
+        exit;
+    }
+
+    if ($book_id > 0) {
+        $stmt = $pdo->prepare("UPDATE books SET title=?, author=?, description=?, category=?, price=?, stock=?, min_stock=?, image=? WHERE id=?");
+        $stmt->execute([$title, $author, $description, $category, $price, $stock, $min_stock, $image, $book_id]);
+        $_SESSION['flash_success'] = "Book updated successfully.";
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO books (title, author, description, category, price, stock, min_stock, image) VALUES (?,?,?,?,?,?,?,?)");
+        $stmt->execute([$title, $author, $description, $category, $price, $stock, $min_stock, $image]);
+        $_SESSION['flash_success'] = "Book added successfully.";
+    }
+    header("Location: manageBook.php");
+    exit;
+}
+
+$books = $pdo->query("SELECT * FROM books ORDER BY id ASC")->fetchAll();
+$dbCategories = $pdo->query("SELECT DISTINCT category FROM books WHERE category IS NOT NULL AND category != ''")->fetchAll(PDO::FETCH_COLUMN);
+$defaultCategories = ['Fiction', 'Non-fiction', 'Children', 'Education & Reference', 'Science & Technology', 'Business & Finance', 'Lifestyle (Health, Cooking, Arts)'];
+$allCategories = array_unique(array_merge($defaultCategories, $dbCategories));
+sort($allCategories);
+?>
+<style>
+    .table-hover tbody tr:hover { background-color: #f8f9fa; transition: 0.2s; }
+    .book-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border: 1px solid #dee2e6; }
+    .btn i { margin-right: 5px; }
+    .modal .form-control, .modal .form-select { border-radius: 8px; }
+    .modal .form-label { font-weight: 500; margin-bottom: 0.25rem; }
+    #imagePreviewContainer { margin-top: 10px; padding: 8px; background: #f1f3f5; border-radius: 12px; display: inline-block; }
+    #imagePreview { max-width: 120px; max-height: 120px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+    .low-stock { background-color: #fff3cd !important; }
+    .quick-stock-form { display: flex; gap: 5px; align-items: center; }
+    .quick-stock-form input { width: 80px; }
+</style>
+
+<h2>Manage Books</h2>
+<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="clearForm()">
+    <i class="fas fa-plus-circle"></i> Add New Book
+</button>
 <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-bordered table-hover align-middle">
         <thead class="table-dark">
             <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th>Subtotal</th>
-                <th>Discount</th>
-                <th>Final Total</th>
-                <th>Voucher</th>
-                <th>Payment Status</th>
-                <th>Order Status</th>
-                <th>Proof</th>
+                <th>ID</th>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Price</th>
+                <th>Latest Stock</th>
+                <th>Min Stock</th>
+                <th>New Stock (+/−)</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-        <?php if (count($orders) == 0): ?>
-            <tr><td colspan="11">No orders found. Sedative
-        <?php else: ?>
-            <?php foreach ($orders as $order): 
-                $discount = $order['discount_amount'] ?? 0;
-                $subtotal = $order['total_amount'] + $discount;
-            ?>
-                <tr>
-                    <td><?= htmlspecialchars($order['order_number']) ?></td>
-                    <td><?= htmlspecialchars($order['user_name']) ?></td>
-                    <td><?= date('d M Y', strtotime($order['order_date'])) ?></td>
-                    <td>RM <?= number_format($subtotal, 2) ?></td>
-                    <td><?= $discount > 0 ? 'RM ' . number_format($discount, 2) : '-' ?></td>
-                    <td><strong>RM <?= number_format($order['total_amount'], 2) ?></strong></td>
-                    <td><?= htmlspecialchars($order['voucher_code'] ?? '-') ?></td>
-                    <td><?= ucfirst($order['payment_status']) ?></td>
-                    <td><?= ucfirst($order['status']) ?></td>
-                    <td>
-                        <?php if ($order['payment_proof']): ?>
-                            <a href="../assets/uploads/payments/<?= $order['payment_proof'] ?>" target="_blank">View</a>
-                        <?php else: ?>
-                            —
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <form method="POST" class="d-inline-block me-1">
-                            <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-                            <select name="status" class="form-select form-select-sm d-inline-block w-auto">
-                                <option value="pending" <?= $order['status']=='pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="paid" <?= $order['status']=='paid' ? 'selected' : '' ?>>Paid</option>
-                                <option value="processing" <?= $order['status']=='processing' ? 'selected' : '' ?>>Processing</option>
-                                <option value="shipped" <?= $order['status']=='shipped' ? 'selected' : '' ?>>Shipped</option>
-                                <option value="completed" <?= $order['status']=='completed' ? 'selected' : '' ?>>Completed</option>
-                                <option value="cancelled" <?= $order['status']=='cancelled' ? 'selected' : '' ?>>Cancelled</option>
-                            </select>
-                            <button type="submit" name="update_status" class="btn btn-sm btn-primary">Update</button>
-                        </form>
-
-                        <?php if (strtolower($order['payment_status']) == 'paid' && !in_array(strtolower($order['status']), ['completed','cancelled'])): ?>
-                            <a href="cancelOrderAdmin.php?order_id=<?= $order['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this order? Stock will be restored and customer will be notified.')">Cancel Order</a>
-                        <?php endif; ?>
-                    </td>
+        <?php $sn = 1; foreach ($books as $book): 
+            $isLowStock = ($book['stock'] <= $book['min_stock']);
+        ?>
+            <tr class="<?= $isLowStock ? 'low-stock' : '' ?>">
+                <td><?= $sn++ ?></td>
+                <td><img src="<?= htmlspecialchars($book['image']) ?>" class="book-thumb" onerror="this.src='/finalproject/booknestonlinebookstoresystem/Image/default.jpg'; this.style.opacity='0.7';"></td>
+                <td><?= htmlspecialchars($book['title']) ?></td>
+                <td><?= htmlspecialchars($book['author']) ?></td>
+                <td>RM <?= number_format($book['price'],2) ?></td>
+                <td><span class="badge <?= $isLowStock ? 'bg-danger' : 'bg-secondary' ?>"><?= $book['stock'] ?></span></td>
+                <td><?= $book['min_stock'] ?></td>
+                <td>
+                    <form method="POST" class="quick-stock-form">
+                        <input type="hidden" name="book_id" value="<?= $book['id'] ?>">
+                        <input type="number" name="stock_delta" value="0" placeholder="+/-" class="form-control form-control-sm" required>
+                        <button type="submit" name="quick_update_stock" class="btn btn-sm btn-outline-primary">Update</button>
+                    </form>
+                 </div>
+                </td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="editBook(<?= htmlspecialchars(json_encode($book)) ?>); return false;">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="?delete=<?= $book['id'] ?>" class="btn btn-sm btn-danger confirm-delete" onclick="return confirm('Delete this book?')">
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </a>
+                    </div>
+                 </div>
                 </tr>
-            <?php endforeach; ?>
-        <?php endif; ?>
+            </tr>
+        <?php endforeach; ?>
         </tbody>
     </table>
 </div>
 
+<div class="modal fade" id="bookModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="fas fa-book"></i> Book Form</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="bookId">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" id="title" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Author <span class="text-danger">*</span></label>
+                            <input type="text" name="author" id="author" class="form-control" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" id="description" class="form-control" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Category</label>
+                            <select name="category" id="category" class="form-select">
+                                <?php foreach ($allCategories as $cat): ?>
+                                    <option value="<?= htmlspecialchars($cat) ?>"><?= htmlspecialchars($cat) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Price (RM) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" name="price" id="price" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Min Stock Threshold</label>
+                            <input type="number" name="min_stock" id="min_stock" class="form-control" value="5">
+                        </div>
+                        <div class="col-md-4" id="stockFieldRow">
+                            <label class="form-label">Initial Stock</label>
+                            <input type="number" name="stock" id="stock" class="form-control" value="0" min="0">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Cover Image</label>
+                            <input type="file" name="image" class="form-control" accept="image/jpeg,image/png,image/gif" id="imageInput">
+                            <div id="imagePreviewContainer" class="mt-2 text-center" style="display: none;">
+                                <img id="imagePreview" src="#" class="img-thumbnail" style="max-height: 120px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function clearForm() {
+    document.getElementById('bookId').value = '';
+    document.getElementById('title').value = '';
+    document.getElementById('author').value = '';
+    document.getElementById('description').value = '';
+    document.getElementById('category').selectedIndex = 0;
+    document.getElementById('price').value = '';
+    document.getElementById('min_stock').value = '5';
+    document.getElementById('stock').value = '0';
+    document.getElementById('stockFieldRow').style.display = 'block';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('imagePreview').src = '';
+}
+function editBook(book) {
+    document.getElementById('bookId').value = book.id;
+    document.getElementById('title').value = book.title;
+    document.getElementById('author').value = book.author;
+    document.getElementById('description').value = book.description || '';
+    let categorySelect = document.getElementById('category');
+    for (let i = 0; i < categorySelect.options.length; i++) {
+        if (categorySelect.options[i].value === book.category) {
+            categorySelect.selectedIndex = i;
+            break;
+        }
+    }
+    document.getElementById('price').value = book.price;
+    document.getElementById('min_stock').value = book.min_stock || 5;
+    document.getElementById('stockFieldRow').style.display = 'none';
+    let imgSrc = (book.image && book.image !== 'default.jpg') ? book.image : '/finalproject/booknestonlinebookstoresystem/Image/default.jpg';
+    document.getElementById('imagePreview').src = imgSrc;
+    document.getElementById('imagePreviewContainer').style.display = 'block';
+}
+document.getElementById('imageInput')?.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            document.getElementById('imagePreview').src = ev.target.result;
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
 <?php include '../Customize&Database/footer.php'; ?>
