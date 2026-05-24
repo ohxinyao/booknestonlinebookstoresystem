@@ -25,7 +25,7 @@ if (isset($_SESSION['user_role'])) {
 
 <nav class="navbar navbar-expand-lg navbar-dark <?= $navbarColor ?>">
     <div class="container">
-        <a class="navbar-brand" href="/finalproject/booknestonlinebookstoresystem/Customer/index.php">📚 BookNest</a>
+        <a class="navbar-brand" href="/finalproject/booknestonlinebookstoresystem/Customer/index.php"><i class="fas fa-book-open me-2"></i>BookNest</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -52,7 +52,7 @@ if (isset($_SESSION['user_role'])) {
                         </a>
                     </li>
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'staff'): ?>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php"><i class="fas fa-dashboard"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/bookManage.php"><i class="fas fa-book"></i> Manage Books</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffManage.php"><i class="fas fa-box"></i> Orders</a></li>
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin'): ?>
