@@ -14,6 +14,12 @@ $update->execute([$userId]);
 include '../Customize&Database/header.php';
 ?>
 
+<div class="mb-3">
+    <a href="selectBook.php" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Continue Shopping
+    </a>
+</div>
+
 <h2>My Notifications</h2>
 <?php if (count($notifications) == 0): ?>
     <div class="alert alert-info">You have no notifications.</div>
