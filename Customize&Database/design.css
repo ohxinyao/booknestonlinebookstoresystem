@@ -602,6 +602,46 @@ body .alert.alert-success h3::before {
     padding: 20px;
 }
 
+.back-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, var(--bn-primary), var(--bn-primary-dark));
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    transition: all 0.25s ease;
+    z-index: 1050;
+}
+
+.back-to-top:hover {
+    background: linear-gradient(135deg, #c4663f, #9a3f23);
+    transform: scale(1.05);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+}
+
+.back-to-top.show {
+    display: flex;
+}
+
+@media (max-width: 768px) {
+    .back-to-top {
+        bottom: 20px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        font-size: 20px;
+    }
+}
+
 @media (max-width: 991px) {
     body > .container.mt-4 {
         border-radius: 0;
