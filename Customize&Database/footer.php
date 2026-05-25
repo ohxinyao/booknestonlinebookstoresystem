@@ -1,4 +1,4 @@
-</div> <!-- end container -->
+</div> 
 <footer class="footer">
     <div class="container">
         <div class="social-links mb-2">
@@ -12,3 +12,10 @@
         <script src="/finalproject/booknestonlinebookstoresystem/Customize&Database/customize.js"></script>
     </div>
 </footer>
+
+    <button class="back-to-top" id="backToTopBtn" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+</body>
+</html>
