@@ -102,14 +102,6 @@ function setNavbarScrollState() {
     }
 }
 
-function updateBackToTopVisibility(button) {
-    if (window.scrollY > 300) {
-        button.classList.add('show');
-    } else {
-        button.classList.remove('show');
-    }
-}
-
 function scrollReveal() {
     const elements = document.querySelectorAll('.reveal, .card, .book-card');
     elements.forEach(el => {
@@ -141,14 +133,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     attachCartQuantityEvents();
     setNavbarScrollState();
-    const backToTop = buildBackToTopButton();
-    updateBackToTopVisibility(backToTop);
+    initBackToTop();
     scrollReveal();
     attachInteractiveCards();
 
     window.addEventListener('scroll', () => {
         setNavbarScrollState();
-        updateBackToTopVisibility(backToTop);
         scrollReveal();
     });
 });
+
+function buildBackToTopButton() {
+    let btn = document.getElementById('backToTopBtn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'backToTopBtn';
+        btn.className = 'back-to-top';
+        btn.innerHTML = '<i class="fas fa-arrow-up"></i>';
+        btn.title = 'Go to top';
+        document.body.appendChild(btn);
+    }
+    return btn;
+}
+
+function initBackToTop() {
+    const backBtn = buildBackToTopButton();
+    if (window.scrollY > 300) {
+        backBtn.classList.add('show');
+    } else {
+        backBtn.classList.remove('show');
+    }
+
+    backBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) {
+            backBtn.classList.add('show');
+        } else {
+            backBtn.classList.remove('show');
+        }
+    });
+}
