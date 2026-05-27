@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
 
         $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)");
         $notifStmt->execute([$order['user_id'], $orderId, $notifMsg]);
+
         $userStmt = $pdo->prepare("SELECT name, email FROM users WHERE id = ?");
         $userStmt->execute([$order['user_id']]);
         $user = $userStmt->fetch();
@@ -75,20 +76,67 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     exit;
 }
 
-$orders = $pdo->query("
-    SELECT o.*, u.name as user_name 
-    FROM orders o 
-    JOIN users u ON o.user_id = u.id 
-    ORDER BY o.order_date DESC
-")->fetchAll();
+$status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
+$date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
+$date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
+$sql = "SELECT o.*, u.name as user_name 
+        FROM orders o 
+        JOIN users u ON o.user_id = u.id 
+        WHERE 1=1";
+$params = [];
+
+if (!empty($status_filter)) {
+    $sql .= " AND o.status = ?";
+    $params[] = $status_filter;
+}
+if (!empty($date_from)) {
+    $sql .= " AND DATE(o.order_date) >= ?";
+    $params[] = $date_from;
+}
+if (!empty($date_to)) {
+    $sql .= " AND DATE(o.order_date) <= ?";
+    $params[] = $date_to;
+}
+$sql .= " ORDER BY o.order_date DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$orders = $stmt->fetchAll();
 ?>
 
 <h2>Manage Orders</h2>
+<form method="GET" class="row g-2 mb-3 align-items-end">
+    <div class="col-auto">
+        <label class="form-label small">Order Status</label>
+        <select name="status" class="form-select form-select-sm">
+            <option value="">All Status</option>
+            <option value="pending" <?= $status_filter == 'pending' ? 'selected' : '' ?>>Pending</option>
+            <option value="paid" <?= $status_filter == 'paid' ? 'selected' : '' ?>>Paid</option>
+            <option value="processing" <?= $status_filter == 'processing' ? 'selected' : '' ?>>Processing</option>
+            <option value="shipped" <?= $status_filter == 'shipped' ? 'selected' : '' ?>>Shipped</option>
+            <option value="completed" <?= $status_filter == 'completed' ? 'selected' : '' ?>>Completed</option>
+            <option value="cancelled" <?= $status_filter == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">From Date</label>
+        <input type="date" name="date_from" class="form-control form-control-sm" value="<?= htmlspecialchars($date_from) ?>">
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">To Date</label>
+        <input type="date" name="date_to" class="form-control form-control-sm" value="<?= htmlspecialchars($date_to) ?>">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+        <a href="manageOrder.php" class="btn btn-sm btn-secondary">Reset</a>
+    </div>
+</form>
+
 <div class="table-responsive">
     <table class="table table-bordered">
         <thead class="table-dark">
             <tr>
-                <th>Order</th>
+                <th>Order #</th>
                 <th>Customer</th>
                 <th>Date</th>
                 <th>Subtotal</th>
@@ -103,7 +151,7 @@ $orders = $pdo->query("
         </thead>
         <tbody>
         <?php if (count($orders) == 0): ?>
-            <tr><td colspan="11">No orders found. Sedative
+            <tr><td colspan="11">No orders found for the selected criteria. Sedative
         <?php else: ?>
             <?php foreach ($orders as $order): 
                 $discount = $order['discount_amount'] ?? 0;
