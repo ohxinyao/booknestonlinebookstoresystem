@@ -5,6 +5,7 @@ include '../Customize&Database/header.php';
 
 $book_id = $_GET['id'] ?? 0;
 $wishlist_success = isset($_GET['wishlist_success']) ? true : false;
+
 $bookStmt = $pdo->prepare("SELECT * FROM books WHERE id = ?");
 $bookStmt->execute([$book_id]);
 $book = $bookStmt->fetch();
@@ -42,7 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && is
     exit;
 }
 
-$reviewsStmt = $pdo->prepare("SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.book_id = ? ORDER BY r.created_at DESC");
+$sort = $_GET['review_sort'] ?? 'newest';
+if ($sort == 'highest') {
+    $orderBy = "r.rating DESC, r.created_at DESC";
+} else {
+    $orderBy = "r.created_at DESC";
+}
+
+$reviewsStmt = $pdo->prepare("SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id = u.id WHERE r.book_id = ? ORDER BY $orderBy");
 $reviewsStmt->execute([$book_id]);
 $reviews = $reviewsStmt->fetchAll();
 
@@ -131,7 +139,18 @@ if ($stock <= 0) {
             <p><a href="../Customer/login.php">Login</a> to leave a review.</p>
         <?php endif; ?>
         <hr>
-        <h4>Customer Reviews</h4>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <h4>Customer Reviews</h4>
+            <form method="GET" class="d-inline">
+                <input type="hidden" name="id" value="<?= $book_id ?>">
+                <select name="review_sort" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+                    <option value="newest" <?= $sort == 'newest' ? 'selected' : '' ?>>Newest First</option>
+                    <option value="highest" <?= $sort == 'highest' ? 'selected' : '' ?>>Highest Rating</option>
+                </select>
+            </form>
+        </div>
+        
         <?php if (count($reviews) == 0): ?>
             <p>No reviews yet. Be the first!</p>
         <?php else: ?>
