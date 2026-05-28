@@ -34,6 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
             throw new Exception("Order not found.");
         }
 
+        $payment_status = $order['payment_status'];
+        if ($payment_status !== 'paid' && in_array($newStatus, ['processing', 'shipped', 'completed'])) {
+            throw new Exception("Cannot change status to '$newStatus' because order is unpaid. Customer must upload payment proof first.");
+        }
+        if ($payment_status === 'paid' && $newStatus === 'pending') {
+            throw new Exception("Order already paid, cannot revert to pending.");
+        }
+
         $shipped_date = null;
         if ($newStatus == 'shipped' && is_null($order['shipped_date'])) {
             $shipped_date = date('Y-m-d H:i:s');
@@ -79,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
 $status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
 $date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
 $date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
+
 $sql = "SELECT o.*, u.name as user_name 
         FROM orders o 
         JOIN users u ON o.user_id = u.id 
