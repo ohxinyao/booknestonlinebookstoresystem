@@ -16,6 +16,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order_id']) && isset($
         exit;
     }
 
+    $stmt = $pdo->prepare("SELECT payment_status, status, order_number, user_id FROM orders WHERE id = ?");
+    $stmt->execute([$order_id]);
+    $order = $stmt->fetch();
+    if (!$order) {
+        $_SESSION['flash_error'] = "Order not found.";
+        header("Location: staffManage.php");
+        exit;
+    }
+
+    $payment_status = $order['payment_status'];
+
+    if ($payment_status !== 'paid' && in_array($new_status, ['processing', 'shipped', 'completed'])) {
+        $_SESSION['flash_error'] = "Cannot change status to '$new_status' because order is unpaid. Customer must upload payment proof first.";
+        header("Location: staffManage.php");
+        exit;
+    }
+
+    if ($payment_status === 'paid' && $new_status === 'pending') {
+        $_SESSION['flash_error'] = "Order already paid, cannot revert to pending.";
+        header("Location: staffManage.php");
+        exit;
+    }
+
     $shipped_date = ($new_status == 'shipped') ? date('Y-m-d H:i:s') : null;
     
     $pdo->beginTransaction();
@@ -28,29 +51,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order_id']) && isset($
             $stmt->execute([$new_status, $order_id]);
         }
 
-        // 获取订单信息用于邮件和通知
-        $orderStmt = $pdo->prepare("SELECT o.*, u.email, u.name FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?");
-        $orderStmt->execute([$order_id]);
-        $order = $orderStmt->fetch();
+        $userStmt = $pdo->prepare("SELECT u.email, u.name, o.order_number FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?");
+        $userStmt->execute([$order_id]);
+        $user = $userStmt->fetch();
 
-        if ($order) {
-            // 发送邮件
-            $subject = "Your order #{$order['order_number']} status updated to {$new_status}";
-            $body = "Dear {$order['name']},<br><br>Your order status has been updated to: <strong>{$new_status}</strong>.<br>";
+        if ($user) {
+            $subject = "Your order #{$user['order_number']} status updated to {$new_status}";
+            $body = "Dear {$user['name']},<br><br>Your order status has been updated to: <strong>{$new_status}</strong>.<br>";
             if ($new_status == 'shipped') {
                 $body .= "Your books have been shipped on " . date('d M Y H:i', strtotime($shipped_date)) . ".<br>";
             }
-            $body .= "You can track your order in your account.<br><br>Thank you.";
-            sendEmail($order['email'], $subject, $body);
+            $body .= "Thank you for shopping with BookNest.";
+            sendEmail($user['email'], $subject, $body);
 
-            // 插入系统通知
-            $notifMsg = "Your order #{$order['order_number']} status is now {$new_status}.";
+            $notifMsg = "Your order #{$user['order_number']} status is now {$new_status}.";
             if ($new_status == 'shipped') {
                 $notifMsg .= " It was shipped on " . date('d M Y', strtotime($shipped_date)) . ".";
             }
             $notifStmt = $pdo->prepare("INSERT INTO notifications (user_id, order_id, message) VALUES (?, ?, ?)");
             $notifStmt->execute([$order['user_id'], $order_id, $notifMsg]);
         }
+
         $pdo->commit();
         $_SESSION['flash_success'] = "Order status updated successfully.";
     } catch (Exception $e) {
@@ -63,4 +84,3 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order_id']) && isset($
     header("Location: staffManage.php");
     exit;
 }
-?>
