@@ -1,3 +1,27 @@
+<?php
+date_default_timezone_set('Asia/Kuala_Lumpur');
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+require_once __DIR__ . '/setDatabase.php';
+
+if (isset($_SESSION['user_id'])) {
+    $updateStmt = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = ?");
+    $updateStmt->execute([$_SESSION['user_id']]);
+}
+
+$navbarColor = 'bg-dark';
+if (isset($_SESSION['user_role'])) {
+    if ($_SESSION['user_role'] == 'staff') {
+        $navbarColor = 'bg-success';   
+    } elseif ($_SESSION['user_role'] == 'admin') {
+        $navbarColor = 'bg-danger';    
+    }
+}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,19 +33,6 @@
     <link rel="stylesheet" href="/finalproject/booknestonlinebookstoresystem/Customize&Database/design.css">
 </head>
 <body>
-
-<?php
-require_once __DIR__ . '/setDatabase.php';
-
-$navbarColor = 'bg-dark';
-if (isset($_SESSION['user_role'])) {
-    if ($_SESSION['user_role'] == 'staff') {
-        $navbarColor = 'bg-success';   
-    } elseif ($_SESSION['user_role'] == 'admin') {
-        $navbarColor = 'bg-danger';    
-    }
-}
-?>
 
 <nav class="navbar navbar-expand-lg navbar-dark <?= $navbarColor ?>">
     <div class="container">
@@ -36,7 +47,22 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/shoppingCart.php"><i class="fas fa-shopping-cart"></i> Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/orderHistory.php"><i class="fas fa-box"></i> My Orders</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/wishList.php"><i class="fas fa-heart"></i> Wishlist</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/chat.php"><i class="fas fa-comments"></i> Live Chat</a></li>
+                    <li class="nav-item position-relative">
+                        <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/chat.php">
+                            <i class="fas fa-comments"></i> Live Chat
+                            <?php
+                            if (isset($_SESSION['user_id'])) {
+                                $chatUnread = $pdo->prepare("SELECT COUNT(*) FROM chat_messages WHERE receiver_id = ? AND is_read = 0");
+                                $chatUnread->execute([$_SESSION['user_id']]);
+                                $unreadChat = $chatUnread->fetchColumn();
+                                if ($unreadChat > 0) {
+                                    echo '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">' . $unreadChat . '</span>';
+                                }
+                            }
+                            ?>
+                        </a>
+                    </li>
+
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Customer/notification.php">
                             <i class="fas fa-bell"></i> Notifications
@@ -56,7 +82,21 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/bookManage.php"><i class="fas fa-book"></i> Manage Books</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffManage.php"><i class="fas fa-box"></i> Orders</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/chat.php"><i class="fas fa-comments"></i> Live Chat</a></li>
+                    <li class="nav-item position-relative">
+                        <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/chat.php">
+                            <i class="fas fa-comments"></i> Live Chat
+                            <?php
+                            if (isset($_SESSION['user_id'])) {
+                                $chatUnread = $pdo->prepare("SELECT COUNT(*) FROM chat_messages WHERE receiver_id = ? AND is_read = 0");
+                                $chatUnread->execute([$_SESSION['user_id']]);
+                                $unreadChat = $chatUnread->fetchColumn();
+                                if ($unreadChat > 0) {
+                                    echo '<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">' . $unreadChat . '</span>';
+                                }
+                            }
+                            ?>
+                        </a>
+                    </li>
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin'): ?>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/mainPage.php"><i class="fas fa-user-shield"></i> Admin</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageOrder.php"><i class="fas fa-box"></i> Orders</a></li>
