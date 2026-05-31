@@ -197,7 +197,7 @@ $orders = $stmt->fetchAll();
                             <button type="submit" name="update_status" class="btn btn-sm btn-primary">Update</button>
                         </form>
 
-                        <?php if (strtolower($order['payment_status']) == 'paid' && !in_array(strtolower($order['status']), ['completed','cancelled'])): ?>
+                        <?php if (strtolower($order['payment_status']) == 'paid' && !in_array(strtolower($order['status']), ['completed','cancelled','shipped'])): ?>
                             <a href="cancelOrderAdmin.php?order_id=<?= $order['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this order? Stock will be restored and customer will be notified.')">Cancel Order</a>
                         <?php endif; ?>
                     </td>
