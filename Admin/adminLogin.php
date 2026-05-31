@@ -59,7 +59,7 @@ include '../Customize&Database/header.php';
                     <button type="submit" class="btn btn-danger w-100 rounded-3">Login</button>
                 </form>
                 <div class="mt-3 text-center">
-                    <a href="../Customize&Database/forgotPassword.php" style="color: #ea1010;">Forgot Password?</a>
+                    <a href="../Customer/forgotPassword.php" style="color: #ea1010;">Forgot Password?</a>
                 </div>
             </div>
         </div>
