@@ -12,7 +12,7 @@ $loginLink = '';
 if (empty($token)) {
     $error = "No reset token provided.";
 } else {
-    $stmt = $pdo->prepare("SELECT id, email, role FROM users WHERE BINARY reset_token = ? AND reset_expires > NOW()");
+    $stmt = $pdo->prepare("SELECT id, email, role, password FROM users WHERE BINARY reset_token = ? AND reset_expires > NOW()");
     $stmt->execute([$token]);
     $user = $stmt->fetch();
 
@@ -22,10 +22,11 @@ if (empty($token)) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $newPassword = $_POST['password'];
 
-            // 验证密码强度
             $strength = validatePasswordStrength($newPassword);
             if ($strength !== true) {
                 $error = $strength;
+            } elseif (password_verify($newPassword, $user['password'])) {
+                $error = "New password cannot be the same as your current password. Please choose a different one.";
             } else {
                 $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
                 $update = $pdo->prepare("UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?");
@@ -52,11 +53,12 @@ if (empty($token)) {
                 <h4 class="mb-0">Reset Password</h4>
             </div>
             <div class="card-body">
-                <?php if ($error): ?>
-                    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-                <?php elseif ($success): ?>
+                <?php if ($success): ?>
                     <div class="alert alert-success"><?= $success ?></div>
                 <?php else: ?>
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                    <?php endif; ?>
                     <form method="POST">
                         <div class="mb-3">
                             <label>New Password</label>
