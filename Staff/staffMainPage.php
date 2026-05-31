@@ -26,7 +26,7 @@ $lowStockCount = count($lowStockBooks);
                     <td><?= htmlspecialchars($book['title']) ?></td>
                     <td><span class="badge bg-danger"><?= $book['stock'] ?></span></td>
                     <td><?= $book['min_stock'] ?></td>
-                    <td><a href="staffManage.php?edit=<?= $book['id'] ?>" class="btn btn-sm btn-primary">Restock</a></td>
+                    <td><a href="bookManage.php?edit=<?= $book['id'] ?>" class="btn btn-sm btn-primary">Restock</a></td>
                 </tr>
             <?php endforeach; ?>
             </tbody>
