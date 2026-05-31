@@ -676,4 +676,39 @@ body .alert.alert-success h3::before {
     .book-card .card-img-top {
         height: 250px !important;
     }
+
+    .form-control, 
+    .form-select, 
+    .btn {
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-primary:hover,
+    .btn-success:hover,
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .table tbody tr:hover {
+        background-color: #fffaf2;
+    }
+
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f3f5;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #cdd4dc;
+        border-radius: 99px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--bn-muted, #6b7280);
+    }
 }
