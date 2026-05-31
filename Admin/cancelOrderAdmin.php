@@ -25,8 +25,8 @@ if (!$order) {
 $status = strtolower($order['status']);
 $payment_status = strtolower($order['payment_status']);
 
-if ($payment_status != 'paid' || $status == 'completed' || $status == 'cancelled') {
-    $_SESSION['flash_error'] = "This order cannot be cancelled.";
+if ($payment_status != 'paid' || in_array($status, ['completed', 'cancelled', 'shipped'])) {
+    $_SESSION['flash_error'] = "This order cannot be cancelled because it has already been shipped or completed.";
     header("Location: manageOrder.php");
     exit;
 }
