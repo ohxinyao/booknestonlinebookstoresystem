@@ -1,19 +1,20 @@
 <?php
 session_start();
-require_once '../Customize&Database/setDatabase.php';
 require_once '../Customize&Database/access.php';
+requireLogin(); 
+require_once '../Customize&Database/setDatabase.php';
 include '../Customize&Database/header.php';
 
-if (!isset($_SESSION['wishlist'])) {
-    $_SESSION['wishlist'] = [];
-}
-
-$wishlistBooks = [];
-if (!empty($_SESSION['wishlist'])) {
-    $ids = implode(',', $_SESSION['wishlist']);
-    $stmt = $pdo->query("SELECT * FROM books WHERE id IN ($ids)");
-    $wishlistBooks = $stmt->fetchAll();
-}
+$userId = $_SESSION['user_id'];
+$stmt = $pdo->prepare("
+    SELECT b.* 
+    FROM books b 
+    JOIN user_wishlist w ON b.id = w.book_id 
+    WHERE w.user_id = ?
+    ORDER BY w.added_at DESC
+");
+$stmt->execute([$userId]);
+$wishlistBooks = $stmt->fetchAll();
 ?>
 
 <div class="mb-3">
