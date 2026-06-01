@@ -232,9 +232,18 @@ include '../Customize&Database/header.php';
             padding: 0.5rem;
         }
     }
+    .back-to-cart {
+        margin-bottom: 1rem;
+    }
 </style>
 
 <div class="container checkout-container">
+    <div class="back-to-cart">
+        <a href="shoppingCart.php" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Cart
+        </a>
+    </div>
+
     <h2 class="mb-4">Checkout</h2>
     <?php if (isset($error)) echo "<div class='alert alert-danger'>$error</div>"; ?>
     
