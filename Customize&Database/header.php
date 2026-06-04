@@ -10,6 +10,39 @@ require_once __DIR__ . '/setDatabase.php';
 if (isset($_SESSION['user_id'])) {
     $updateStmt = $pdo->prepare("UPDATE users SET last_activity = NOW() WHERE id = ?");
     $updateStmt->execute([$_SESSION['user_id']]);
+    if (!isset($_SESSION['cart_loaded'])) {
+        $userId = $_SESSION['user_id'];
+        $stmt = $pdo->prepare("SELECT book_id, quantity FROM user_cart WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $dbCart = [];
+        while ($row = $stmt->fetch()) {
+            $dbCart[$row['book_id']] = $row['quantity'];
+        }
+        if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
+            foreach ($_SESSION['cart'] as $book_id => $qty) {
+                if (isset($dbCart[$book_id])) {
+                    $dbCart[$book_id] += $qty;
+                } else {
+                    $dbCart[$book_id] = $qty;
+                }
+            }
+        }
+        $_SESSION['cart'] = $dbCart;
+        $pdo->beginTransaction();
+        try {
+            $delete = $pdo->prepare("DELETE FROM user_cart WHERE user_id = ?");
+            $delete->execute([$userId]);
+            $insert = $pdo->prepare("INSERT INTO user_cart (user_id, book_id, quantity) VALUES (?, ?, ?)");
+            foreach ($dbCart as $book_id => $qty) {
+                $insert->execute([$userId, $book_id, $qty]);
+            }
+            $pdo->commit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            error_log("Failed to sync cart on login: " . $e->getMessage());
+        }
+        $_SESSION['cart_loaded'] = true;
+    }
 }
 
 $navbarColor = 'bg-dark';
@@ -103,7 +136,6 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/saleReport.php"><i class="fas fa-chart-line"></i> Sales Report</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageUser.php"><i class="fas fa-users"></i> Manage Users</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Update Books</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageStaff.php"><i class="fas fa-user"></i> Manage Staff</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/approve_password_changes.php"><i class="fas fa-check-circle"></i> Approve Password Changes</a></li>
                 <?php endif; ?>
             </ul>
