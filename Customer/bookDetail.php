@@ -13,18 +13,27 @@ if (!$book) {
     die("Book not found.");
 }
 
+$canLeaveReview = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'customer';
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
     if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
     $qty = intval($_POST['quantity']);
     if ($qty > 0 && $qty <= $book['stock']) {
         $_SESSION['cart'][$book_id] = ($_SESSION['cart'][$book_id] ?? 0) + $qty;
         $added = true;
+        if (isset($_SESSION['user_id'])) {
+            $userId = $_SESSION['user_id'];
+            $newQty = $_SESSION['cart'][$book_id];
+            $stmt = $pdo->prepare("INSERT INTO user_cart (user_id, book_id, quantity) VALUES (?, ?, ?) 
+                                    ON DUPLICATE KEY UPDATE quantity = ?");
+            $stmt->execute([$userId, $book_id, $newQty, $newQty]);
+        }
     } else {
         $error = "Invalid quantity or insufficient stock.";
     }
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && isset($_SESSION['user_id'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_review']) && $canLeaveReview && isset($_SESSION['user_id'])) {
     $rating = intval($_POST['rating']);
     $comment = trim($_POST['comment']);
     $is_anonymous = isset($_POST['is_anonymous']) ? 1 : 0;
@@ -114,27 +123,31 @@ if ($stock <= 0) {
         <hr>
         <h4>Rate & Review this book</h4>
         <?php if (isset($_SESSION['user_id'])): ?>
-            <form method="POST">
-                <div class="mb-2">
-                    <select name="rating" class="form-select w-auto">
-                        <option value="5">★★★★★ (5)</option>
-                        <option value="4">★★★★ (4)</option>
-                        <option value="3">★★★ (3)</option>
-                        <option value="2">★★ (2)</option>
-                        <option value="1">★ (1)</option>
-                    </select>
-                </div>
-                <div class="mb-2">
-                    <textarea name="comment" rows="3" class="form-control" placeholder="Write your review..."></textarea>
-                </div>
-                <div class="mb-2">
-                    <div class="form-check">
-                        <input type="checkbox" name="is_anonymous" value="1" class="form-check-input" id="anonymousCheck">
-                        <label class="form-check-label" for="anonymousCheck">Post anonymously (name will not be shown)</label>
+            <?php if ($canLeaveReview): ?>
+                <form method="POST">
+                    <div class="mb-2">
+                        <select name="rating" class="form-select w-auto">
+                            <option value="5">★★★★★ (5)</option>
+                            <option value="4">★★★★ (4)</option>
+                            <option value="3">★★★ (3)</option>
+                            <option value="2">★★ (2)</option>
+                            <option value="1">★ (1)</option>
+                        </select>
                     </div>
-                </div>
-                <button type="submit" name="submit_review" class="btn btn-warning">Submit Review</button>
-            </form>
+                    <div class="mb-2">
+                        <textarea name="comment" rows="3" class="form-control" placeholder="Write your review..."></textarea>
+                    </div>
+                    <div class="mb-2">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_anonymous" value="1" class="form-check-input" id="anonymousCheck">
+                            <label class="form-check-label" for="anonymousCheck">Post anonymously (name will not be shown)</label>
+                        </div>
+                    </div>
+                    <button type="submit" name="submit_review" class="btn btn-warning">Submit Review</button>
+                </form>
+            <?php else: ?>
+                <p class="text-muted">Only customer accounts can leave reviews. Staff and admin accounts are not allowed to submit reviews.</p>
+            <?php endif; ?>
         <?php else: ?>
             <p><a href="../Customer/login.php">Login</a> to leave a review.</p>
         <?php endif; ?>
