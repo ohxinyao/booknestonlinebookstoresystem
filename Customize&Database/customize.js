@@ -76,20 +76,7 @@ function handleQuantityChange(e) {
 }
 
 function attachCartQuantityEvents() {
-    document.querySelectorAll('.qty-decr').forEach(btn => {
-        btn.removeEventListener('click', handleDecrement);
-        btn.addEventListener('click', handleDecrement);
-    });
-
-    document.querySelectorAll('.qty-incr').forEach(btn => {
-        btn.removeEventListener('click', handleIncrement);
-        btn.addEventListener('click', handleIncrement);
-    });
-
-    document.querySelectorAll('.qty-input').forEach(input => {
-        input.removeEventListener('change', handleQuantityChange);
-        input.addEventListener('change', handleQuantityChange);
-    });
+    return;
 }
 
 function setNavbarScrollState() {
