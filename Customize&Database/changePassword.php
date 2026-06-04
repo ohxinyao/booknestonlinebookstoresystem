@@ -62,33 +62,32 @@ if ($userRole == 'admin' && !$forceChange) {
                         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
                     <?php elseif ($success): ?>
                         <div class="alert alert-success"><?= $success ?></div>
-                    <?php else: ?>
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label>Current Password</label>
-                                <div class="input-group">
-                                    <input type="password" name="current_password" id="current_password" class="form-control" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show Password</button>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label>New Password</label>
-                                <div class="input-group">
-                                    <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
-                                </div>
-                                <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
-                            </div>
-                            <div class="mb-3">
-                                <label>Confirm New Password</label>
-                                <div class="input-group">
-                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Update Password</button>
-                        </form>
                     <?php endif; ?>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label>Current Password</label>
+                            <div class="input-group">
+                                <input type="password" name="current_password" id="current_password" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show Password</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
+                            </div>
+                            <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Confirm New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Update Password</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -143,28 +142,25 @@ if ($forceChange) {
                 <div class="card-body">
                     <?php if ($error): ?>
                         <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-                    <?php elseif ($success): ?>
-                        <div class="alert alert-success"><?= $success ?></div>
-                    <?php else: ?>
-                        <form method="POST">
-                            <div class="mb-3">
-                                <label>New Password</label>
-                                <div class="input-group">
-                                    <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
-                                </div>
-                                <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
-                            </div>
-                            <div class="mb-3">
-                                <label>Confirm New Password</label>
-                                <div class="input-group">
-                                    <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
-                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Update Password</button>
-                        </form>
                     <?php endif; ?>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label>New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
+                            </div>
+                            <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Confirm New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Update Password</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -183,6 +179,8 @@ if ($forceChange) {
     exit;
 }
 
+$error = '';
+$success = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $check = $pdo->prepare("SELECT id FROM password_change_requests WHERE user_id = ? AND status = 'pending'");
     $check->execute([$userId]);
@@ -204,16 +202,17 @@ include 'header.php';
                 <h4 class="mb-0">Request Password Change</h4>
             </div>
             <div class="card-body">
-                <?php if (isset($error)): ?>
+                <?php if ($error): ?>
                     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-                <?php elseif (isset($success)): ?>
+                <?php elseif ($success): ?>
                     <div class="alert alert-success"><?= $success ?></div>
-                <?php else: ?>
-                    <form method="POST">
-                        <p>To change your password, you must request approval from an administrator. After approval, you will receive an email with a link to set a new password.</p>
-                        <button type="submit" class="btn btn-primary w-100">Submit Request</button>
-                    </form>
                 <?php endif; ?>
+                <form method="POST" id="requestForm">
+                    <p>To change your password, you must request approval from an administrator. After approval, you will receive an email with a link to set a new password.</p>
+                    <button type="submit" id="submitBtn" class="btn btn-primary w-100" <?php if ($success) echo 'disabled'; ?>>
+                        <?php if ($success): ?>Request Submitted<?php else: ?>Submit Request<?php endif; ?>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -227,5 +226,8 @@ function togglePassword(fieldId) {
         field.type = "password";
     }
 }
+<?php if ($success): ?>
+document.getElementById('submitBtn').disabled = true;
+<?php endif; ?>
 </script>
 <?php include 'footer.php'; ?>
