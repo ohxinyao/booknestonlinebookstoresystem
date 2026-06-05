@@ -146,6 +146,7 @@ if (isset($_SESSION['user_role'])) {
                             <?= htmlspecialchars($_SESSION['user_name']) ?> (<?= $_SESSION['user_role'] ?>)
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/profile.php">My Profile</a></li>
                             <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customize&Database/changePassword.php">Change Password</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/finalproject/booknestonlinebookstoresystem/Customer/logout.php">Logout</a></li>
