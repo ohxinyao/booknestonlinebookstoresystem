@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '../setDatabase.php';
+require_once __DIR__ . '/setDatabase.php';
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -11,10 +11,11 @@ function isLoggedIn() {
 
 function requireLogin() {
     if (!isLoggedIn()) {
-        header('Location: ../login.php');
+        header('Location: /finalproject/booknestonlinebookstoresystem/Customer/login.php');
         exit;
     }
 }
+
 
 function requireRole($role) {
     requireLogin();
@@ -26,11 +27,11 @@ function requireRole($role) {
 function redirectIfLoggedIn() {
     if (isLoggedIn()) {
         if ($_SESSION['user_role'] === 'admin') {
-            header('Location: ../finalProject/booknestonlinebookstoresystem/Admin/mainPage.php');
+            header('Location: /finalproject/booknestonlinebookstoresystem/Admin/mainPage.php');
         } elseif ($_SESSION['user_role'] === 'staff') {
-            header('Location: ../finalProject/booknestonlinebookstoresystem/Staff/staffMainPage.php');
+            header('Location: /finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php');
         } else {
-            header('Location: index.php');
+            header('Location: /finalproject/booknestonlinebookstoresystem/Customer/index.php');
         }
         exit;
     }
