@@ -30,13 +30,13 @@ if (isset($_SESSION['flash_error'])) {
     </a>
 </div>
 
-<h2>My Orders</h2>
+<h2 class="text-center mb-4">My Orders</h2>
 
 <?php if (count($orders) == 0): ?>
     <div class="alert alert-info">You haven't placed any orders yet. <a href="index.php">Start shopping</a></div>
 <?php else: ?>
     <div class="table-responsive">
-        <table class="table table-bordered">
+        <table class="table table-bordered text-center">
             <thead class="table-dark">
                 <tr>
                     <th>Order ID</th>
@@ -50,7 +50,7 @@ if (isset($_SESSION['flash_error'])) {
                     <th>Payment</th>
                     <th>Proof</th>
                     <th style="min-width: 120px;">Action</th>
-                </td>
+                </tr>
             </thead>
             <tbody>
             <?php foreach ($orders as $order): 
@@ -75,11 +75,12 @@ if (isset($_SESSION['flash_error'])) {
                     <td><?= ucfirst($order['payment_status']) ?></td>
                     <td>
                         <?php if (!empty($order['payment_proof'])): ?>
-                            <a href="../assets/uploads/payments/<?= htmlspecialchars($order['payment_proof']) ?>" target="_blank">View</a>
+                            <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#paymentProofModal" onclick="loadPaymentProof(<?= (int)$order['id'] ?>)">
+                                View
+                            </button>
                         <?php else: ?>
                             Not uploaded
                         <?php endif; ?>
-                    </div>
                     </td>
                     <td class="align-middle">
                         <div class="d-flex flex-column gap-2">
@@ -107,6 +108,24 @@ if (isset($_SESSION['flash_error'])) {
     </div>
 <?php endif; ?>
 
+<div class="modal fade" id="paymentProofModal" tabindex="-1" aria-labelledby="paymentProofModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentProofModalLabel">Payment Proof</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="paymentProofContent">
+                <div class="text-center">Loading proof...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Order Items -->
 <div class="modal fade" id="orderItemsModal" tabindex="-1" aria-labelledby="orderItemsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -116,7 +135,7 @@ if (isset($_SESSION['flash_error'])) {
             </div>
             <div class="modal-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered">
+                    <table class="table table-bordered text-center">
                         <thead class="table-dark">
                             <tr><th>Book Title</th><th>Quantity</th><th>Unit Price</th><th>Subtotal</th></tr>
                         </thead>
@@ -127,9 +146,9 @@ if (isset($_SESSION['flash_error'])) {
                             <tr class="table-light">
                                 <th colspan="3" class="text-end">Total Amount:</th>
                                 <th id="modalTotalAmount">-</th>
-                             </tr>
+                            </tr>
                         </tfoot>
-                     </table>
+                    </table>
                 </div>
             </div>
             <div class="modal-footer">
@@ -140,10 +159,41 @@ if (isset($_SESSION['flash_error'])) {
 </div>
 
 <script>
+function loadPaymentProof(orderId) {
+    const modalBody = document.getElementById('paymentProofContent');
+    modalBody.innerHTML = '<div class="text-center">Loading proof...</div>';
+
+    fetch('getPaymentProof.php?order_id=' + orderId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.file) {
+                const imgHtml = `
+                    <div class="text-center">
+                        <p><strong>Order Number:</strong> ${escapeHtml(data.order_number)}</p>
+                        <img src="${escapeHtml(data.file)}" class="img-fluid rounded border" alt="Payment Proof" style="max-height: 500px;">
+                        <div class="mt-3">
+                            <a href="${escapeHtml(data.file)}" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="fas fa-external-link-alt"></i> Open in new tab
+                            </a>
+                        </div>
+                    </div>
+                `;
+                modalBody.innerHTML = imgHtml;
+            } else {
+                modalBody.innerHTML = '<div class="alert alert-warning">Payment proof is not available.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching payment proof:', error);
+            modalBody.innerHTML = '<div class="alert alert-danger">Failed to load payment proof.</div>';
+        });
+}
+
 function loadOrderItems(orderId) {
     const tbody = document.getElementById('orderItemsList');
     tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
     document.getElementById('modalTotalAmount').innerText = '-';
+    
     fetch('getOrderItem.php?order_id=' + orderId)
         .then(response => response.json())
         .then(data => {
@@ -172,6 +222,7 @@ function loadOrderItems(orderId) {
 }
 
 function escapeHtml(str) {
+    if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
         if (m === '&') return '&amp;';
         if (m === '<') return '&lt;';
@@ -213,8 +264,12 @@ function escapeHtml(str) {
     .w-100 {
         width: 100%;
     }
-    .table td {
-        vertical-align: middle;
+    .table td, .table th {
+        vertical-align: middle !important;
+        text-align: center !important;
+    }
+    .table td .d-flex {
+        align-items: center;
     }
 </style>
 
