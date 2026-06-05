@@ -43,11 +43,11 @@ if (!empty($_SESSION['cart'])) {
 include '../Customize&Database/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Shopping Cart</h2>
-    <a href="selectBook.php" class="btn btn-outline-secondary">
+<div class="d-flex flex-column align-items-start mb-3">
+    <a href="selectBook.php" class="btn btn-outline-secondary mb-2">
         <i class="fas fa-arrow-left"></i> Continue Shopping
     </a>
+    <h2 class="mb-0">Shopping Cart</h2>
 </div>
 
 <?php if (!empty($checkoutError)): ?>
