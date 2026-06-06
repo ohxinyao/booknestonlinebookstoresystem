@@ -46,11 +46,15 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $navbarColor = 'bg-dark';
+$pendingPasswordRequests = 0;
 if (isset($_SESSION['user_role'])) {
     if ($_SESSION['user_role'] == 'staff') {
         $navbarColor = 'bg-success';   
     } elseif ($_SESSION['user_role'] == 'admin') {
-        $navbarColor = 'bg-danger';    
+        $navbarColor = 'bg-danger';
+        $pendingPasswordStmt = $pdo->prepare("SELECT COUNT(*) FROM password_change_requests WHERE status = 'pending'");
+        $pendingPasswordStmt->execute();
+        $pendingPasswordRequests = (int)$pendingPasswordStmt->fetchColumn();
     }
 }
 ?>
@@ -114,6 +118,7 @@ if (isset($_SESSION['user_role'])) {
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'staff'): ?>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/bookManage.php"><i class="fas fa-book"></i> Manage Books</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageCategories.php"><i class="fas fa-tags"></i> Manage Categories</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffManage.php"><i class="fas fa-box"></i> Orders</a></li>
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/chat.php">
@@ -136,7 +141,15 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/saleReport.php"><i class="fas fa-chart-line"></i> Sales Report</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageUser.php"><i class="fas fa-users"></i> Manage Users</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Update Books</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/approve_password_changes.php"><i class="fas fa-check-circle"></i> Approve Password Changes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageCategories.php"><i class="fas fa-tags"></i> Manage Categories</a></li>
+                    <li class="nav-item position-relative">
+                        <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/approve_password_changes.php">
+                            <i class="fas fa-check-circle"></i> Approve Password Changes
+                            <?php if ($pendingPasswordRequests > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white" style="font-size: 0.65rem; min-width: 1.1rem;"><?= $pendingPasswordRequests ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                 <?php endif; ?>
             </ul>
             <ul class="navbar-nav">
