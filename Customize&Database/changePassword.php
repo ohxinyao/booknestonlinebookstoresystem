@@ -179,55 +179,149 @@ if ($forceChange) {
     exit;
 }
 
-$error = '';
-$success = '';
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $check = $pdo->prepare("SELECT id FROM password_change_requests WHERE user_id = ? AND status = 'pending'");
-    $check->execute([$userId]);
-    if ($check->fetch()) {
-        $error = "You already have a pending request. Please wait for admin approval.";
-    } else {
-        $token = bin2hex(random_bytes(32));
-        $stmt = $pdo->prepare("INSERT INTO password_change_requests (user_id, token) VALUES (?, ?)");
-        $stmt->execute([$userId, $token]);
-        $success = "Your request has been submitted. An admin will review it and send you a password reset link if approved.";
+if ($userRole == 'customer') {
+    $error = '';
+    $success = '';
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $current = $_POST['current_password'];
+        $new = $_POST['new_password'];
+        $confirm = $_POST['confirm_password'];
+
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $currentHash = $stmt->fetchColumn();
+
+        if (!password_verify($current, $currentHash)) {
+            $error = "Current password is incorrect.";
+        } elseif ($new !== $confirm) {
+            $error = "New passwords do not match.";
+        } else {
+            $strength = validatePasswordStrength($new);
+            if ($strength !== true) {
+                $error = $strength;
+            } elseif (password_verify($new, $currentHash)) {
+                $error = "New password cannot be the same as the current password.";
+            } else {
+                $hashed = password_hash($new, PASSWORD_DEFAULT);
+                $update = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $update->execute([$hashed, $userId]);
+                $success = "Password changed successfully.";
+            }
+        }
     }
-}
-include 'header.php';
-?>
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-warning">
-                <h4 class="mb-0">Request Password Change</h4>
-            </div>
-            <div class="card-body">
-                <?php if ($error): ?>
-                    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-                <?php elseif ($success): ?>
-                    <div class="alert alert-success"><?= $success ?></div>
-                <?php endif; ?>
-                <form method="POST" id="requestForm">
-                    <p>To change your password, you must request approval from an administrator. After approval, you will receive an email with a link to set a new password.</p>
-                    <button type="submit" id="submitBtn" class="btn btn-primary w-100" <?php if ($success) echo 'disabled'; ?>>
-                        <?php if ($success): ?>Request Submitted<?php else: ?>Submit Request<?php endif; ?>
-                    </button>
-                </form>
+    include 'header.php';
+    ?>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0">Change Password</h4>
+                </div>
+                <div class="card-body">
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                    <?php elseif ($success): ?>
+                        <div class="alert alert-success"><?= $success ?></div>
+                    <?php endif; ?>
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label>Current Password</label>
+                            <div class="input-group">
+                                <input type="password" name="current_password" id="current_password" class="form-control" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show Password</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label>New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
+                            </div>
+                            <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Confirm New Password</label>
+                            <div class="input-group">
+                                <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Update Password</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<script>
-function togglePassword(fieldId) {
-    var field = document.getElementById(fieldId);
-    if (field.type === "password") {
-        field.type = "text";
-    } else {
-        field.type = "password";
+    <script>
+    function togglePassword(fieldId) {
+        var field = document.getElementById(fieldId);
+        if (field.type === "password") {
+            field.type = "text";
+        } else {
+            field.type = "password";
+        }
     }
+    </script>
+    <?php include 'footer.php';
+    exit;
 }
-<?php if ($success): ?>
-document.getElementById('submitBtn').disabled = true;
-<?php endif; ?>
-</script>
-<?php include 'footer.php'; ?>
+
+if ($userRole == 'staff') {
+    $error = '';
+    $success = '';
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $check = $pdo->prepare("SELECT id FROM password_change_requests WHERE user_id = ? AND status = 'pending'");
+        $check->execute([$userId]);
+        if ($check->fetch()) {
+            $error = "You already have a pending request. Please wait for admin approval.";
+        } else {
+            $token = bin2hex(random_bytes(32));
+            $stmt = $pdo->prepare("INSERT INTO password_change_requests (user_id, token) VALUES (?, ?)");
+            $stmt->execute([$userId, $token]);
+            $success = "Your request has been submitted. An admin will review it and send you a password reset link if approved.";
+        }
+    }
+    include 'header.php';
+    ?>
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0">Request Password Change</h4>
+                </div>
+                <div class="card-body">
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                    <?php elseif ($success): ?>
+                        <div class="alert alert-success"><?= $success ?></div>
+                    <?php endif; ?>
+                    <form method="POST" id="requestForm">
+                        <p>To change your password, you must request approval from an administrator. After approval, you will receive an email with a link to set a new password.</p>
+                        <button type="submit" id="submitBtn" class="btn btn-primary w-100" <?php if ($success) echo 'disabled'; ?>>
+                            <?php if ($success): ?>Request Submitted<?php else: ?>Submit Request<?php endif; ?>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function togglePassword(fieldId) {
+        var field = document.getElementById(fieldId);
+        if (field.type === "password") {
+            field.type = "text";
+        } else {
+            field.type = "password";
+        }
+    }
+    <?php if ($success): ?>
+    document.getElementById('submitBtn').disabled = true;
+    <?php endif; ?>
+    </script>
+    <?php include 'footer.php';
+    exit;
+}
+
+header("Location: ../Customer/login.php");
+exit;
+?>
