@@ -14,17 +14,13 @@ if (isset($_GET['approve'])) {
         $reset_token = bin2hex(random_bytes(32));
         $update = $pdo->prepare("UPDATE users SET reset_token = ?, reset_expires = DATE_ADD(NOW(), INTERVAL 1 HOUR) WHERE id = ?");
         $update->execute([$reset_token, $req['user_id']]);
-
         $userStmt = $pdo->prepare("SELECT email, name FROM users WHERE id = ?");
         $userStmt->execute([$req['user_id']]);
         $user = $userStmt->fetch();
-
         $resetLink = "http://localhost/finalproject/booknestonlinebookstoresystem/Customer/resetPassword.php?token=$reset_token";
         $subject = "Password change request approved";
         $body = "Dear {$user['name']},<br><br>Your password change request has been approved. Click <a href='$resetLink'>here</a> to set a new password. This link will expire in 1 hour.<br><br>If you did not request this, please ignore this email.";
         sendEmail($user['email'], $subject, $body);
-
-        // 更新请求状态
         $approve = $pdo->prepare("UPDATE password_change_requests SET status = 'approved', approved_by = ?, approved_at = NOW() WHERE id = ?");
         $approve->execute([$_SESSION['user_id'], $request_id]);
 
@@ -59,24 +55,35 @@ $requests = $pdo->query("SELECT pcr.*, u.name, u.email FROM password_change_requ
 <?php if (count($requests) == 0): ?>
     <p>No pending requests.</p>
 <?php else: ?>
-    <table class="table table-bordered">
-        <thead>
-            <tr><th>ID</th><th>User</th><th>Email</th><th>Requested At</th><th>Action</th></tr>
-        </thead>
-        <tbody>
-        <?php foreach ($requests as $req): ?>
-            <tr>
-                <td><?= $req['id'] ?></td>
-                <td><?= htmlspecialchars($req['name']) ?></td>
-                <td><?= htmlspecialchars($req['email']) ?></td>
-                <td><?= $req['requested_at'] ?></td>
-                <td>
-                    <a href="?approve=<?= $req['id'] ?>" class="btn btn-sm btn-success" onclick="return confirm('Approve this request?')">Approve</a>
-                    <a href="?reject=<?= $req['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Reject this request?')">Reject</a>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Requested At</th>
+                    <th class="text-nowrap">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            <?php $rowNum = 1; ?>
+            <?php foreach ($requests as $req): ?>
+                <tr>
+                    <td><?= $rowNum++ ?>   
+                    <td><?= htmlspecialchars($req['name']) ?></td>
+                    <td><?= htmlspecialchars($req['email']) ?></td>
+                    <td><?= $req['requested_at'] ?></td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-center">
+                            <a href="?approve=<?= $req['id'] ?>" class="btn btn-sm btn-success px-3 py-2" onclick="return confirm('Approve this request?')">Approve</a>
+                            <a href="?reject=<?= $req['id'] ?>" class="btn btn-sm btn-danger px-3 py-2" onclick="return confirm('Reject this request?')">Reject</a>
+                        </div>
+                     </td>
+                 </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 <?php endif; ?>
 <?php include '../Customize&Database/footer.php'; ?>
