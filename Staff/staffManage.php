@@ -23,13 +23,13 @@ if (isset($_SESSION['flash_error'])) {
 }
 ?>
 
-<h2>Incoming Orders</h2>
+<h2>Manage Orders</h2>
 
 <div class="table-responsive">
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>
-                <th>Order #</th>
+                <th>Order</th>
                 <th>Customer</th>
                 <th>Date</th>
                 <th>Subtotal</th>
@@ -45,7 +45,7 @@ if (isset($_SESSION['flash_error'])) {
         </thead>
         <tbody>
         <?php if (count($orders) == 0): ?>
-            <tr><td colspan="12">No orders found.</td></td>
+            <td><td colspan="12">No orders found. Sedative
         <?php else: ?>
             <?php foreach ($orders as $order): 
                 $discount = $order['discount_amount'] ?? 0;
@@ -74,6 +74,7 @@ if (isset($_SESSION['flash_error'])) {
                         <?php else: ?>
                             —
                         <?php endif; ?>
+                     </div>
                     </td>
                     <td>
                         <form method="POST" action="updateOrder.php" style="display:inline;">
@@ -86,12 +87,14 @@ if (isset($_SESSION['flash_error'])) {
                                 <option value="completed" <?= $order['status'] == 'completed' ? 'selected' : '' ?>>Completed</option>
                                 <option value="cancelled" <?= $order['status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
                             </select>
-                            <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                            <button type="submit" name="update_status" class="btn btn-sm btn-primary">Update</button>
                         </form>
-                        
-                        <?php if ($order['payment_status'] == 'paid' && $order['status'] != 'completed' && $order['status'] != 'cancelled'): ?>
+
+                        <?php if ($order['payment_status'] == 'paid' && $order['status'] != 'completed' && $order['status'] != 'cancelled' && $order['status'] != 'shipped'): ?>
                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal" 
-                                    data-order-id="<?= $order['id'] ?>" data-order-number="<?= $order['order_number'] ?>">Reject Order</button>
+                                    data-order-id="<?= $order['id'] ?>" data-order-number="<?= htmlspecialchars($order['order_number']) ?>">
+                                Cancel Order
+                            </button>
                         <?php endif; ?>
                      </div>
                     </td>
@@ -107,19 +110,20 @@ if (isset($_SESSION['flash_error'])) {
         <div class="modal-content">
             <form method="POST" action="rejectOrder.php">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="rejectModalLabel">Reject Order</h5>
+                    <h5 class="modal-title" id="rejectModalLabel">Cancel Order</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input type="hidden" name="order_id" id="reject_order_id" value="">
                     <div class="mb-3">
-                        <label for="reject_reason" class="form-label">Reason for rejection (e.g., wrong amount, payment not received):</label>
-                        <textarea class="form-control" name="reject_reason" id="reject_reason" rows="3" required></textarea>
+                        <label for="reject_reason" class="form-label">Cancellation Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="reason" id="reject_reason" rows="3" required></textarea>
+                        <div class="form-text">This reason will be sent to the customer via email and notification.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reject Order</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
                 </div>
             </form>
         </div>
@@ -127,18 +131,16 @@ if (isset($_SESSION['flash_error'])) {
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
     var rejectModal = document.getElementById('rejectModal');
-    rejectModal.addEventListener('show.bs.modal', function(event) {
+    rejectModal.addEventListener('show.bs.modal', function (event) {
         var button = event.relatedTarget;
         var orderId = button.getAttribute('data-order-id');
         var orderNumber = button.getAttribute('data-order-number');
         var inputId = rejectModal.querySelector('#reject_order_id');
         var modalTitle = rejectModal.querySelector('.modal-title');
         inputId.value = orderId;
-        modalTitle.innerText = 'Reject Order #' + orderNumber;
+        modalTitle.textContent = 'Cancel Order #' + orderNumber;
     });
-});
 </script>
 
 <?php include '../Customize&Database/footer.php'; ?>
