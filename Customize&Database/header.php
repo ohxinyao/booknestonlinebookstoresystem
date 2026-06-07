@@ -117,8 +117,7 @@ if (isset($_SESSION['user_role'])) {
                     </li>
                 <?php elseif (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'staff'): ?>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffMainPage.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/bookManage.php"><i class="fas fa-book"></i> Manage Books</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageCategories.php"><i class="fas fa-tags"></i> Manage Categories</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Books & Categories</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/staffManage.php"><i class="fas fa-box"></i> Orders</a></li>
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Staff/chat.php">
@@ -140,8 +139,7 @@ if (isset($_SESSION['user_role'])) {
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageOrder.php"><i class="fas fa-box"></i> Orders</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/saleReport.php"><i class="fas fa-chart-line"></i> Sales Report</a></li>
                     <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageUser.php"><i class="fas fa-users"></i> Manage Users</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Update Books</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageCategories.php"><i class="fas fa-tags"></i> Manage Categories</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/manageBook.php"><i class="fas fa-book"></i> Books & Categories</a></li>
                     <li class="nav-item position-relative">
                         <a class="nav-link" href="/finalproject/booknestonlinebookstoresystem/Admin/approve_password_changes.php">
                             <i class="fas fa-check-circle"></i> Approve Password Changes
