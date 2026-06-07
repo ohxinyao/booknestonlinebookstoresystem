@@ -5,7 +5,7 @@ require_once '../Customize&Database/access.php';
 requireLogin();
 
 $userId = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT id, order_number, total_amount, discount_amount, voucher_code, status, payment_status, payment_proof, order_date, shipped_date 
+$stmt = $pdo->prepare("SELECT id, order_number, total_amount, discount_amount, voucher_code, status, payment_status, payment_proof, order_date, shipped_date, cancellation_reason 
                        FROM orders 
                        WHERE user_id = ? 
                        ORDER BY order_date DESC");
@@ -68,6 +68,10 @@ if (isset($_SESSION['flash_error'])) {
                         <span class="badge bg-<?= $order['status'] == 'completed' ? 'success' : ($order['status'] == 'cancelled' ? 'danger' : 'warning') ?>">
                             <?= ucfirst($order['status']) ?>
                         </span>
+                        <?php if ($order['status'] == 'cancelled' && !empty($order['cancellation_reason'])): ?>
+                            <br><small class="text-muted">Reason: <?= htmlspecialchars($order['cancellation_reason']) ?></small>
+                        <?php endif; ?>
+                    </div>
                     </td>
                     <td>
                         <?= $order['shipped_date'] ? date('d M Y', strtotime($order['shipped_date'])) : '-' ?>
@@ -81,11 +85,12 @@ if (isset($_SESSION['flash_error'])) {
                         <?php else: ?>
                             Not uploaded
                         <?php endif; ?>
+                    </div>
                     </td>
                     <td class="align-middle">
                         <div class="d-flex flex-column gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#orderItemsModal" onclick="loadOrderItems(<?= $order['id'] ?>)">
-                                <i class="fas fa-eye"></i> View
+                                <i class="fas fa-eye"></i> View Orders
                             </button>
 
                             <?php if ($order['payment_status'] == 'unpaid' && $order['status'] != 'cancelled'): ?>
@@ -100,8 +105,8 @@ if (isset($_SESSION['flash_error'])) {
                                 </a>
                             <?php endif; ?>
                         </div>
-                    </td>
-                </tr>
+                    </div>
+                </table>
             <?php endforeach; ?>
             </tbody>
         </table>
@@ -125,7 +130,6 @@ if (isset($_SESSION['flash_error'])) {
     </div>
 </div>
 
-<!-- Modal for Order Items -->
 <div class="modal fade" id="orderItemsModal" tabindex="-1" aria-labelledby="orderItemsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
@@ -140,7 +144,7 @@ if (isset($_SESSION['flash_error'])) {
                             <tr><th>Book Title</th><th>Quantity</th><th>Unit Price</th><th>Subtotal</th></tr>
                         </thead>
                         <tbody id="orderItemsList">
-                            <tr><td colspan="4" class="text-center">Loading...</td></tr>
+                            <tr><td colspan="4" class="text-center">Loading...</div></td>
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
@@ -191,7 +195,7 @@ function loadPaymentProof(orderId) {
 
 function loadOrderItems(orderId) {
     const tbody = document.getElementById('orderItemsList');
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center">Loading...</div></td>';
     document.getElementById('modalTotalAmount').innerText = '-';
     
     fetch('getOrderItem.php?order_id=' + orderId)
@@ -202,22 +206,22 @@ function loadOrderItems(orderId) {
                 data.items.forEach(item => {
                     html += `
                         <tr>
-                            <td>${escapeHtml(item.title)}</td>
-                            <td class="text-center">${item.quantity}</td>
-                            <td class="text-end">RM ${item.price}</td>
-                            <td class="text-end">RM ${item.subtotal}</td>
+                            <td>${escapeHtml(item.title)}</div>
+                            <td class="text-center">${item.quantity}</div>
+                            <td class="text-end">RM ${item.price}</div>
+                            <td class="text-end">RM ${item.subtotal}</div>
                         </tr>
                     `;
                 });
                 tbody.innerHTML = html;
                 document.getElementById('modalTotalAmount').innerText = 'RM ' + data.total;
             } else {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Failed to load items.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Failed to load items.</div></tr>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading items.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading items.</div></tr>';
         });
 }
 
