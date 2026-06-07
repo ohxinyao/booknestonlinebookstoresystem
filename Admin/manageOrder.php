@@ -198,7 +198,10 @@ $orders = $stmt->fetchAll();
                         </form>
 
                         <?php if (strtolower($order['payment_status']) == 'paid' && !in_array(strtolower($order['status']), ['completed','cancelled','shipped'])): ?>
-                            <a href="cancelOrderAdmin.php?order_id=<?= $order['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Cancel this order? Stock will be restored and customer will be notified.')">Cancel Order</a>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" 
+                                data-order-id="<?= $order['id'] ?>" data-order-number="<?= htmlspecialchars($order['order_number']) ?>">
+                                Cancel Order
+                            </button>
                         <?php endif; ?>
                     </td>
                 </tr>
@@ -207,5 +210,43 @@ $orders = $stmt->fetchAll();
         </tbody>
     </table>
 </div>
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="cancelOrderAdmin.php">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">Cancel Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="order_id" id="cancel_order_id" value="">
+                    <div class="mb-3">
+                        <label for="cancel_reason" class="form-label">Cancellation Reason <span class="text-danger">*</span></label>
+                        <textarea class="form-control" name="reason" id="cancel_reason" rows="3" required></textarea>
+                        <div class="form-text">This reason will be sent to the customer via email and notification.</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var cancelModal = document.getElementById('cancelModal');
+    cancelModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var orderId = button.getAttribute('data-order-id');
+        var orderNumber = button.getAttribute('data-order-number');
+        var modalTitle = cancelModal.querySelector('.modal-title');
+        var inputOrderId = cancelModal.querySelector('#cancel_order_id');
+        modalTitle.textContent = 'Cancel Order #' + orderNumber;
+        inputOrderId.value = orderId;
+    });
+</script>
 
 <?php include '../Customize&Database/footer.php'; ?>
