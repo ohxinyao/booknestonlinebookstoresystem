@@ -3,7 +3,11 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start();
 require_once '../Customize&Database/access.php';
-requireRole('admin');
+requireLogin();
+$userRole = $_SESSION['user_role'];
+if ($userRole != 'admin' && $userRole != 'staff') {
+    die("Access denied.");
+}
 require_once '../Customize&Database/function.php';
 include '../Customize&Database/header.php';
 
@@ -36,10 +40,63 @@ if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_P
 }
 
 if (isset($_GET['delete'])) {
+    if ($userRole !== 'admin') {
+        $_SESSION['flash_error'] = 'Only admin can delete books.';
+        header("Location: manageBook.php");
+        exit;
+    }
+
     $id = (int)$_GET['delete'];
     $stmt = $pdo->prepare("DELETE FROM books WHERE id = ?");
     $stmt->execute([$id]);
     $_SESSION['flash_success'] = "Book deleted successfully.";
+    header("Location: manageBook.php");
+    exit;
+}
+
+if (isset($_POST['add_category'])) {
+    $categoryName = trim($_POST['category_name']);
+    if ($categoryName === '') {
+        $_SESSION['flash_error'] = 'Category name cannot be empty.';
+    } else {
+        $check = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
+        $check->execute([$categoryName]);
+        if ($check->fetch()) {
+            $_SESSION['flash_error'] = 'Category already exists.';
+        } else {
+            $insert = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+            if ($insert->execute([$categoryName])) {
+                $_SESSION['flash_success'] = "Category '$categoryName' added successfully.";
+            } else {
+                $_SESSION['flash_error'] = 'Failed to add category.';
+            }
+        }
+    }
+    header("Location: manageBook.php");
+    exit;
+}
+
+if (isset($_GET['delete_category'])) {
+    if ($userRole !== 'admin') {
+        $_SESSION['flash_error'] = 'Only admin can delete categories.';
+        header("Location: manageBook.php");
+        exit;
+    }
+
+    $catId = (int)$_GET['delete_category'];
+    $checkBook = $pdo->prepare("SELECT COUNT(*) FROM books WHERE category = (SELECT name FROM categories WHERE id = ?)");
+    $checkBook->execute([$catId]);
+    $usedCount = (int)$checkBook->fetchColumn();
+    if ($usedCount > 0) {
+        $_SESSION['flash_error'] = "Cannot delete this category because it is used by $usedCount book(s). Please reassign those books first.";
+    } else {
+        $delete = $pdo->prepare("DELETE FROM categories WHERE id = ?");
+        if ($delete->execute([$catId])) {
+            $_SESSION['flash_success'] = 'Category deleted successfully.';
+        } else {
+            $_SESSION['flash_error'] = 'Failed to delete category.';
+        }
+    }
     header("Location: manageBook.php");
     exit;
 }
@@ -135,6 +192,7 @@ foreach ($existingCats as $cat) {
     $stmt->execute([$cat]);
 }
 
+$categories = $pdo->query("SELECT * FROM categories ORDER BY id ASC")->fetchAll();
 $allCategories = $pdo->query("SELECT name FROM categories ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
 if (empty($allCategories)) {
     $defaultCategories = ['Fiction', 'Non-fiction', 'Children', 'Education & Reference', 'Science & Technology', 'Business & Finance', 'Lifestyle (Health, Cooking, Arts)'];
@@ -158,6 +216,68 @@ foreach ($books as $book) {
 ?>
 
 <style>
+    .page-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 1.15rem;
+    }
+
+    .page-head {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: end;
+        gap: 0.75rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        border-radius: 999px;
+        padding: 0.35rem 0.65rem;
+        background: #fff4ea;
+        color: #9b5726;
+        border: 1px solid #f3d2bf;
+        font-size: 0.92rem;
+        font-weight: 700;
+    }
+
+    .category-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border: 2px solid #d8e1ea;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 14px 30px rgba(36, 49, 66, 0.08);
+        background: linear-gradient(135deg, #ffffff, #f8fbff);
+    }
+
+    .category-card .card-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+    }
+
+    .category-card .card-header-custom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        width: 100%;
+        background: linear-gradient(135deg, #243142, #3a5166);
+        color: #fff;
+        padding: 0.95rem 1rem;
+        font-weight: 700;
+    }
+
+    .category-card .card-header-custom strong {
+        flex: 1 1 220px;
+    }
+
     .category-section {
         margin-bottom: 2rem;
     }
@@ -229,7 +349,62 @@ foreach ($books as $book) {
     }
 </style>
 
-<h2>Manage Books</h2>
+<div class="page-shell">
+    <div class="page-head">
+        <div>
+            <h2 class="mb-1">Manage Books & Categories</h2>
+        </div>
+        <span class="chip"><i class="fas fa-user-shield me-1"></i><?= htmlspecialchars($userRole) ?> access</span>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-lg-6">
+            <div class="category-card">
+                <div class="card-header-custom">
+                    <strong><i class="fas fa-plus-circle me-2"></i>Add New Category</strong>
+                    <span class="chip bg-white text-dark">Quick add</span>
+                </div>
+                <div class="card-body pt-3 pb-3">
+                    <form method="POST" class="row g-3 align-items-end mb-0">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Category Name</label>
+                            <input type="text" name="category_name" class="form-control" placeholder="e.g. Fiction, Non-fiction" required>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" name="add_category" class="btn btn-primary w-100">Add Category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="category-card">
+                <div class="card-header-custom">
+                    <strong><i class="fas fa-tags me-2"></i>Existing Categories</strong>
+                    <span class="chip bg-white text-dark">Live list</span>
+                </div>
+                <div class="card-body">
+                    <?php if (empty($categories)): ?>
+                        <p class="text-muted mb-0">No categories yet.</p>
+                    <?php else: ?>
+                        <div class="d-flex flex-wrap gap-2">
+                            <?php foreach ($categories as $cat): ?>
+                                <span class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center gap-2 py-2 px-3">
+                                    <i class="fas fa-tag text-secondary"></i><?= htmlspecialchars($cat['name']) ?>
+                                    <?php if ($userRole === 'admin'): ?>
+                                        <a href="?delete_category=<?= (int)$cat['id'] ?>" class="text-danger text-decoration-none" onclick="return confirm('Delete this category? It cannot be used by any book.')" title="Delete category">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="clearForm()">
     <i class="fas fa-plus-circle"></i> Add New Book
 </button>
@@ -278,9 +453,11 @@ foreach ($books as $book) {
                                     <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="editBook(<?= htmlspecialchars(json_encode($book)) ?>); return false;">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <a href="?delete=<?= $book['id'] ?>" class="btn btn-sm btn-danger confirm-delete" onclick="return confirm('Delete this book?')">
-                                        <i class="fas fa-trash-alt"></i> Delete
-                                    </a>
+                                    <?php if ($userRole === 'admin'): ?>
+                                        <a href="?delete=<?= $book['id'] ?>" class="btn btn-sm btn-danger confirm-delete" onclick="return confirm('Delete this book?')">
+                                            <i class="fas fa-trash-alt"></i> Delete
+                                        </a>
+                                    <?php endif; ?>
                                 </div>
                             </td>
                         </tr>
