@@ -56,11 +56,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_user'])) {
     $email = trim($_POST['email']);
     $role = $_POST['role'];
 
-    if ($id > 0) {
-        $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ? WHERE id = ? AND role = ?");
-        $stmt->execute([$name, $email, $id, $role]);
-        $_SESSION['flash_success'] = ucfirst($role) . " updated successfully.";
-    } else {
+    if ($email === '') {
+        $_SESSION['flash_error'] = 'Email cannot be empty.';
+        header('Location: manageUser.php');
+        exit;
+    }
+
+    $emailCheck = $pdo->prepare($id > 0
+        ? 'SELECT id FROM users WHERE email = ? AND id <> ?'
+        : 'SELECT id FROM users WHERE email = ?');
+    $emailCheck->execute($id > 0 ? [$email, $id] : [$email]);
+    if ($emailCheck->fetch()) {
+        $_SESSION['flash_error'] = 'This email address is already registered. Please use another email.';
+        header('Location: manageUser.php');
+        exit;
+    }
+
+    try {
+        if ($id > 0) {
+            $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ? WHERE id = ? AND role = ?');
+            $stmt->execute([$name, $email, $id, $role]);
+            $_SESSION['flash_success'] = ucfirst($role) . ' updated successfully.';
+        } else {
         if ($role == 'staff') {
             $defaultPassword = '0123456789';
             $mustChange = 1;
@@ -72,13 +89,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_user'])) {
             $subject = "Welcome to BookNest";
             $body = "Dear $name,<br><br>Your customer account has been created.<br>Default password: <strong>$defaultPassword</strong><br><br>Please login and change your password.<br><br>Best regards,<br>BookNest Admin";
         }
-        $hashed = password_hash($defaultPassword, PASSWORD_DEFAULT);
-        $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role, email_verified, must_change_password) VALUES (?, ?, ?, ?, 1, ?)");
-        $stmt->execute([$name, $email, $hashed, $role, $mustChange]);
-        sendEmail($email, $subject, $body);
-        $_SESSION['flash_success'] = ucfirst($role) . " added. Default password: $defaultPassword (sent to email)";
+            $hashed = password_hash($defaultPassword, PASSWORD_DEFAULT);
+            $stmt = $pdo->prepare('INSERT INTO users (name, email, password, role, email_verified, must_change_password) VALUES (?, ?, ?, ?, 1, ?)');
+            $stmt->execute([$name, $email, $hashed, $role, $mustChange]);
+            sendEmail($email, $subject, $body);
+            $_SESSION['flash_success'] = ucfirst($role) . ' added. Default password: ' . $defaultPassword . ' (sent to email)';
+        }
+    } catch (PDOException $e) {
+        $_SESSION['flash_error'] = 'This email address is already registered or the update could not be completed. Please try another email.';
+        header('Location: manageUser.php');
+        exit;
     }
-    header("Location: manageUser.php");
+    header('Location: manageUser.php');
     exit;
 }
 
