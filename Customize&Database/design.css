@@ -20,12 +20,12 @@ body {
 
 body {
     background:
-        linear-gradient(180deg, rgba(246, 248, 251, 0.35), rgba(246, 248, 251, 0.55)),
-        url('/finalproject/booknestonlinebookstoresystem/Image/background.jpg');
+    linear-gradient(180deg, rgba(246, 248, 251, 0.35), rgba(246, 248, 251, 0.55)),
+    url('/finalproject/booknestonlinebookstoresystem/Image/background.jpg');
     background-size: cover;
-    background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
+    background-attachment: scroll;
     color: var(--bn-ink);
     display: flex;
     flex-direction: column;
