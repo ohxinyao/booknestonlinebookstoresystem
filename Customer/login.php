@@ -1,8 +1,13 @@
 <?php
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: Thu, 01 Jan 1970 00:00:00 GMT");
+
 session_start();
 require_once '../Customize&Database/setDatabase.php';
 require_once '../Customize&Database/access.php';
-redirectIfLoggedIn();
+
+$alreadyLoggedIn = isset($_SESSION['user_id']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
@@ -37,6 +42,9 @@ include '../Customize&Database/header.php';
                 <h4 class="mb-0">Welcome to BookNest!</h4>
             </div>
             <div class="card-body">
+                <?php if ($alreadyLoggedIn): ?>
+                    <div class="alert alert-info">You are already logged in as <strong><?= htmlspecialchars($_SESSION['user_name']) ?></strong>. If you wish to switch account, please <a href="logout.php">logout</a> first.</div>
+                <?php endif; ?>
                 <?php if (isset($error)): ?>
                     <div class="alert alert-danger"><?= $error ?></div>
                 <?php endif; ?>
@@ -66,6 +74,7 @@ include '../Customize&Database/header.php';
         </div>
     </div>
 </div>
+
 <script>
 function togglePassword(fieldId) {
     var field = document.getElementById(fieldId);
