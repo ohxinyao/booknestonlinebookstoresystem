@@ -1,8 +1,13 @@
 <?php
+header("Cache-Control: no-cache, no-store, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: Thu, 01 Jan 1970 00:00:00 GMT");
+
 session_start();
 require_once '../Customize&Database/setDatabase.php';
 require_once '../Customize&Database/access.php';
-redirectIfLoggedIn();
+
+$alreadyLoggedIn = isset($_SESSION['user_id']);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = $_POST['email'];
@@ -16,9 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             if ($user['role'] !== 'staff') {
                 $error = "This login page is for staff only. Please use the <a href='/finalproject/booknestonlinebookstoresystem/Customer/login.php'>Customer Login</a> or <a href='/finalproject/booknestonlinebookstoresystem/Admin/adminLogin.php'>Admin Login</a>.";
-            } 
-            
-            else {
+            } else {
                 if (isset($user['must_change_password']) && $user['must_change_password'] == 1) {
                     $_SESSION['force_password_change'] = true;
                     $_SESSION['temp_user_id'] = $user['id'];
@@ -28,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_role'] = $user['role'];
-                header("Location: ../Customer/index.php");
+                header("Location: staffMainPage.php");
                 exit;
             }
         }
@@ -45,6 +48,9 @@ include '../Customize&Database/header.php';
                 <h4 class="mb-0">Staff Login</h4>
             </div>
             <div class="card-body">
+                <?php if ($alreadyLoggedIn): ?>
+                    <div class="alert alert-info">You are already logged in as <strong><?= htmlspecialchars($_SESSION['user_name']) ?></strong>. If you wish to switch account, please <a href="../Customer/logout.php">logout</a> first.</div>
+                <?php endif; ?>
                 <?php if (isset($error)): ?>
                     <div class="alert alert-danger"><?= $error ?></div>
                 <?php endif; ?>
