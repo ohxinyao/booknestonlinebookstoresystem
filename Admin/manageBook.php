@@ -53,22 +53,44 @@ if (isset($_GET['delete'])) {
     header("Location: manageBook.php");
     exit;
 }
-
-if (isset($_POST['add_category'])) {
+    
+if (isset($_POST['add_category']) || isset($_POST['edit_category'])) {
     $categoryName = trim($_POST['category_name']);
+    $editId = (int)($_POST['edit_category_id'] ?? 0);
+    
     if ($categoryName === '') {
         $_SESSION['flash_error'] = 'Category name cannot be empty.';
     } else {
-        $check = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
-        $check->execute([$categoryName]);
-        if ($check->fetch()) {
-            $_SESSION['flash_error'] = 'Category already exists.';
-        } else {
-            $insert = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
-            if ($insert->execute([$categoryName])) {
-                $_SESSION['flash_success'] = "Category '$categoryName' added successfully.";
+        if ($editId > 0) {
+            $check = $pdo->prepare("SELECT id FROM categories WHERE name = ? AND id != ?");
+            $check->execute([$categoryName, $editId]);
+            if ($check->fetch()) {
+                $_SESSION['flash_error'] = 'Category already exists.';
             } else {
-                $_SESSION['flash_error'] = 'Failed to add category.';
+                $oldStmt = $pdo->prepare("SELECT name FROM categories WHERE id = ?");
+                $oldStmt->execute([$editId]);
+                $oldName = $oldStmt->fetchColumn();
+                $update = $pdo->prepare("UPDATE categories SET name = ? WHERE id = ?");
+                if ($update->execute([$categoryName, $editId])) {
+                    $syncBooks = $pdo->prepare("UPDATE books SET category = ? WHERE category = ?");
+                    $syncBooks->execute([$categoryName, $oldName]);
+                    $_SESSION['flash_success'] = "Category renamed to '$categoryName' successfully.";
+                } else {
+                    $_SESSION['flash_error'] = 'Failed to update category.';
+                }
+            }
+        } else {
+            $check = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
+            $check->execute([$categoryName]);
+            if ($check->fetch()) {
+                $_SESSION['flash_error'] = 'Category already exists.';
+            } else {
+                $insert = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+                if ($insert->execute([$categoryName])) {
+                    $_SESSION['flash_success'] = "Category '$categoryName' added successfully.";
+                } else {
+                    $_SESSION['flash_error'] = 'Failed to add category.';
+                }
             }
         }
     }
@@ -108,7 +130,7 @@ if (isset($_GET['edit'])) {
     $editBook = $stmt->fetch();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['quick_update_stock'])) {
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['quick_update_stock']) && !isset($_POST['add_category']) && !isset($_POST['edit_category'])) {
     $title = trim($_POST['title']);
     $author = trim($_POST['author']);
     $description = trim($_POST['description']);
@@ -361,17 +383,18 @@ foreach ($books as $book) {
         <div class="col-lg-6">
             <div class="category-card">
                 <div class="card-header-custom">
-                    <strong><i class="fas fa-plus-circle me-2"></i>Add New Category</strong>
+                    <strong id="categoryCardTitle"><i class="fas fa-plus-circle me-2"></i>Add New Category</strong>
                     <span class="chip bg-white text-dark">Quick add</span>
                 </div>
                 <div class="card-body pt-3 pb-3">
-                    <form method="POST" class="row g-3 align-items-end mb-0">
+                    <form method="POST" id="categoryForm" class="row g-3 align-items-end mb-0">
+                        <input type="hidden" name="edit_category_id" id="editCategoryIdField" value="">
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Category Name</label>
-                            <input type="text" name="category_name" class="form-control" placeholder="e.g. Fiction, Non-fiction" required>
+                            <input type="text" name="category_name" id="categoryNameInput" class="form-control" placeholder="e.g. Fiction, Non-fiction" required>
                         </div>
                         <div class="col-md-4">
-                            <button type="submit" name="add_category" class="btn btn-primary w-100">Add Category</button>
+                            <button type="submit" id="categorySubmitBtn" name="add_category" class="btn btn-primary w-100">Add Category</button>
                         </div>
                     </form>
                 </div>
@@ -392,6 +415,9 @@ foreach ($books as $book) {
                                 <span class="badge rounded-pill bg-light text-dark border d-inline-flex align-items-center gap-2 py-2 px-3">
                                     <i class="fas fa-tag text-secondary"></i><?= htmlspecialchars($cat['name']) ?>
                                     <?php if ($userRole === 'admin'): ?>
+                                        <button type="button" class="btn btn-link p-0 text-primary text-decoration-none" data-category='<?= json_encode($cat, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>' onclick="openCategoryEdit(this); return false;" title="Edit category">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
                                         <a href="?delete_category=<?= (int)$cat['id'] ?>" class="text-danger text-decoration-none" onclick="return confirm('Delete this category? It cannot be used by any book.')" title="Delete category">
                                             <i class="fas fa-times"></i>
                                         </a>
@@ -542,6 +568,27 @@ foreach ($books as $book) {
         document.getElementById('stockFieldRow').style.display = 'block';
         document.getElementById('imagePreviewContainer').style.display = 'none';
         document.getElementById('imagePreview').src = '';
+        resetCategoryForm(); 
+    }
+
+    function resetCategoryForm() {
+        document.getElementById('categoryCardTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i>Add New Category';
+        document.getElementById('categorySubmitBtn').innerHTML = 'Add Category';
+        document.getElementById('categorySubmitBtn').name = 'add_category';
+        document.getElementById('categoryNameInput').value = '';
+        document.getElementById('editCategoryIdField').value = '';
+    }
+
+    function openCategoryEdit(btn) {
+        var category = JSON.parse(btn.getAttribute('data-category'));
+        document.getElementById('categoryCardTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Existing Category';
+        document.getElementById('categorySubmitBtn').innerHTML = 'Update Category';
+        document.getElementById('categorySubmitBtn').name = 'edit_category';
+        document.getElementById('categoryNameInput').value = category.name;
+        document.getElementById('editCategoryIdField').value = category.id;
+        document.querySelector('.category-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('categoryNameInput').focus();
+        document.getElementById('categoryNameInput').select();
     }
 
     function editBook(book) {
@@ -563,6 +610,7 @@ foreach ($books as $book) {
         document.getElementById('imagePreview').src = imgSrc;
         document.getElementById('imagePreviewContainer').style.display = 'block';
     }
+
     document.getElementById('imageInput')?.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
