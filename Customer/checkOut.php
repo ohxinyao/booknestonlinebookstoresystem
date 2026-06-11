@@ -1,6 +1,6 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 session_start();
 require_once '../Customize&Database/setDatabase.php';
 require_once '../Customize&Database/access.php';
@@ -66,6 +66,7 @@ foreach ($books as $book) {
 if (isset($_GET['check_voucher'])) {
     header('Content-Type: application/json');
     $code = trim($_GET['code']);
+    $code = strtoupper($code);
     $response = ['valid' => false, 'message' => '', 'discount' => 0, 'new_total' => $total];
 
     if (empty($code)) {
@@ -91,40 +92,38 @@ if (isset($_GET['check_voucher'])) {
     } else {
         $validConditions = true;
         $conditionMessage = '';
+        
+        $$conditions = !empty($voucher['conditions']) ? json_decode($voucher['conditions'], true) : [];
+ 
+        if ($validConditions && isset($conditions['new_member_only']) && $conditions['new_member_only'] === true) {
+            $userId = $_SESSION['user_id'];
+            $orderCheck = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = ? AND (payment_status = 'paid' OR status = 'completed')");
+            $orderCheck->execute([$userId]);
+            $hasOrder = $orderCheck->fetchColumn() > 0;
 
-        if ($code === 'SAVE10') {
-            $validConditions = true;
-        } else {
-            $conditions = json_decode($voucher['conditions'], true);
-            if ($conditions) {
-                if (isset($conditions['new_member_only']) && $conditions['new_member_only'] === true) {
-                    $userId = $_SESSION['user_id'];
-                    $orderCheck = $pdo->prepare("SELECT COUNT(*) FROM orders WHERE user_id = ? AND (payment_status = 'paid' OR status = 'completed')");
-                    $orderCheck->execute([$userId]);
-                    $hasOrder = $orderCheck->fetchColumn() > 0;
-
-                    if ($hasOrder) {
-                        $validConditions = false;
-                        $conditionMessage = 'This voucher is for new members only. You have already placed an order.';
-                    }
+            if ($hasOrder) {
+                $validConditions = false;
+                $conditionMessage = 'This voucher is for new members only. You have already placed an order.';
+            }
+        }
+        
+        if ($validConditions && isset($conditions['categories']) && is_array($conditions['categories']) && !empty($conditions['categories'])) {
+            $allowedCategories = $conditions['categories'];
+            $hasValidCategory = false;
+            
+            foreach ($cartItems as $item) {
+                $bookCategory = $item['book']['category'];
+                
+                if (in_array($bookCategory, $allowedCategories)) {
+                    $hasValidCategory = true;
+                    break; 
                 }
-
-                if ($validConditions && isset($conditions['categories']) && is_array($conditions['categories']) && !empty($conditions['categories'])) {
-                    $allowedCategories = $conditions['categories'];
-                    $cartCategories = [];
-
-                    foreach ($cartItems as $item) {
-                        $cartCategories[] = $item['book']['category'];
-                    }
-
-                    $invalidCategories = array_diff($cartCategories, $allowedCategories);
-
-                    if (!empty($invalidCategories)) {
-                        $validConditions = false;
-                        $categoryList = implode(', ', $allowedCategories);
-                        $conditionMessage = "This voucher only applies to books in categories: $categoryList. Your cart contains items from other categories.";
-                    }
-                }
+            }
+            
+            if (!$hasValidCategory) {
+                $validConditions = false;
+                $categoryList = implode(', ', $allowedCategories);
+                $conditionMessage = "This voucher requires at least one book in categories: $categoryList. Your cart does not contain any eligible books.";
             }
         }
 
@@ -135,21 +134,24 @@ if (isset($_GET['check_voucher'])) {
         }
 
         $discount = 0;
-
         if ($voucher['discount_type'] == 'percentage') {
             $discount = $total * ($voucher['discount_value'] / 100);
         } else {
             $discount = $voucher['discount_value'];
         }
-
+        
         $discount = min($discount, $total);
+        
+        if ($voucher['discount_type'] == 'percentage' && isset($voucher['max_discount']) && $voucher['max_discount'] > 0) {
+            $discount = min($discount, $voucher['max_discount']);
+        }
 
         $response['valid'] = true;
         $response['discount'] = $discount;
         $response['new_total'] = $total - $discount;
         $response['message'] = 'Voucher applied! You saved RM ' . number_format($discount, 2);
 
-        $_SESSION['temp_voucher'] = ['code' => $code, 'discount' => $discount];
+        $_SESSION['temp_voucher'] = ['code' => $voucher['code'], 'discount' => $discount];
     }
 
     echo json_encode($response);
@@ -172,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['place_order'])) {
         }
     }
 
-    $finalTotal = $total - $discount;
+    $finalTotal = max(0, $total - $discount);
 
     $pdo->beginTransaction();
 
@@ -324,7 +326,7 @@ include '../Customize&Database/header.php';
                             <tbody>
                             <?php foreach ($cartItems as $item): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($item['book']['title']) ?></td>
+                                    <td><?= htmlspecialchars($item['book']['title']) ?> (<?= htmlspecialchars($item['book']['category']) ?>)</div>
                                     <td class="text-center"><?= $item['qty'] ?></td>
                                     <td class="text-end">RM <?= number_format($item['book']['price'], 2) ?></td>
                                     <td class="text-end">RM <?= number_format($item['subtotal'], 2) ?></td>
@@ -362,7 +364,7 @@ include '../Customize&Database/header.php';
 
                 <div class="card-body">
                     <div class="input-group mb-2">
-                        <input type="text" id="voucher_code" class="form-control" placeholder="Enter voucher code">
+                        <input type="text" id="voucher_code" class="form-control" placeholder="Enter voucher code (auto-converted to uppercase)">
                         <button class="btn btn-outline-primary" type="button" id="apply_voucher">Apply</button>
                     </div>
 
@@ -404,6 +406,10 @@ include '../Customize&Database/header.php';
 </div>
 
 <script>
+document.getElementById('voucher_code').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+});
+
 document.getElementById('apply_voucher').addEventListener('click', function() {
     let code = document.getElementById('voucher_code').value.trim();
 
