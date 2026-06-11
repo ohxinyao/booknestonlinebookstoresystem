@@ -84,19 +84,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_status'])) {
     exit;
 }
 
-$status_filter = isset($_GET['status']) ? trim($_GET['status']) : '';
+$order_status = isset($_GET['order_status']) ? trim($_GET['order_status']) : '';
+$payment_status = isset($_GET['payment_status']) ? trim($_GET['payment_status']) : '';
 $date_from = isset($_GET['date_from']) ? trim($_GET['date_from']) : '';
 $date_to = isset($_GET['date_to']) ? trim($_GET['date_to']) : '';
 
-$sql = "SELECT o.*, u.name as user_name 
+$sql = "SELECT o.*, u.name as customer_name 
         FROM orders o 
         JOIN users u ON o.user_id = u.id 
         WHERE 1=1";
 $params = [];
 
-if (!empty($status_filter)) {
+if (!empty($order_status)) {
     $sql .= " AND o.status = ?";
-    $params[] = $status_filter;
+    $params[] = $order_status;
+}
+if (!empty($payment_status)) {
+    $sql .= " AND o.payment_status = ?";
+    $params[] = $payment_status;
 }
 if (!empty($date_from)) {
     $sql .= " AND DATE(o.order_date) >= ?";
@@ -113,18 +118,84 @@ $stmt->execute($params);
 $orders = $stmt->fetchAll();
 ?>
 
+<style>
+    .table td,
+    .table th {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+ 
+    .filter-form .form-select,
+    .filter-form select {
+        min-width: 180px !important;
+        width: auto !important;
+        padding-right: 2rem !important;
+    }
+    
+    .filter-form input[type="date"] {
+        min-width: 150px !important;
+    }
+    
+    .action-cell {
+        min-width: 130px;
+    }
+    
+    .action-cell .form-select,
+    .action-cell select {
+        min-width: 120px !important;
+        width: auto !important;
+        padding: 0.3rem 1.5rem 0.3rem 0.5rem !important;
+        font-size: 0.7rem !important;
+        display: inline-block !important;
+    }
+    
+    .action-cell .btn-sm,
+    .action-cell .btn {
+        padding: 0.35rem 0.6rem !important;
+        font-size: 0.7rem !important;
+        white-space: nowrap !important;
+    }
+    
+    .action-cell form {
+        display: inline-flex !important;
+        gap: 6px !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-form .col-auto {
+            width: 100%;
+        }
+        .filter-form select,
+        .filter-form input,
+        .filter-form button {
+            width: 100%;
+        }
+    }
+</style>
+
 <h2>Manage Orders</h2>
-<form method="GET" class="row g-2 mb-3 align-items-end">
+
+<form method="GET" class="row g-2 mb-3 align-items-end filter-form">
     <div class="col-auto">
         <label class="form-label small">Order Status</label>
-        <select name="status" class="form-select form-select-sm">
-            <option value="">All Status</option>
-            <option value="pending" <?= $status_filter == 'pending' ? 'selected' : '' ?>>Pending</option>
-            <option value="paid" <?= $status_filter == 'paid' ? 'selected' : '' ?>>Paid</option>
-            <option value="processing" <?= $status_filter == 'processing' ? 'selected' : '' ?>>Processing</option>
-            <option value="shipped" <?= $status_filter == 'shipped' ? 'selected' : '' ?>>Shipped</option>
-            <option value="completed" <?= $status_filter == 'completed' ? 'selected' : '' ?>>Completed</option>
-            <option value="cancelled" <?= $status_filter == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+        <select name="order_status" class="form-select form-select-sm">
+            <option value="">All Order Status</option>
+            <option value="pending" <?= $order_status == 'pending' ? 'selected' : '' ?>>Pending</option>
+            <option value="processing" <?= $order_status == 'processing' ? 'selected' : '' ?>>Processing</option>
+            <option value="shipped" <?= $order_status == 'shipped' ? 'selected' : '' ?>>Shipped</option>
+            <option value="completed" <?= $order_status == 'completed' ? 'selected' : '' ?>>Completed</option>
+            <option value="cancelled" <?= $order_status == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <label class="form-label small">Payment Status</label>
+        <select name="payment_status" class="form-select form-select-sm">
+            <option value="">All Payment Status</option>
+            <option value="unpaid" <?= $payment_status == 'unpaid' ? 'selected' : '' ?>>Unpaid</option>
+            <option value="paid" <?= $payment_status == 'paid' ? 'selected' : '' ?>>Paid</option>
         </select>
     </div>
     <div class="col-auto">
@@ -142,25 +213,26 @@ $orders = $stmt->fetchAll();
 </form>
 
 <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>
-                <th>Order #</th>
+                <th>Order</th>
                 <th>Customer</th>
-                <th>Date</th>
+                <th>Date & Time</th>
                 <th>Subtotal</th>
                 <th>Discount</th>
                 <th>Final Total</th>
                 <th>Voucher</th>
-                <th>Payment Status</th>
                 <th>Order Status</th>
+                <th>Shipped Date</th>
+                <th>Payment Status</th>
                 <th>Proof</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
         <?php if (count($orders) == 0): ?>
-            <tr><td colspan="11">No orders found for the selected criteria. Sedative
+            <tr><td colspan="12">No orders found from the table. Sedative
         <?php else: ?>
             <?php foreach ($orders as $order): 
                 $discount = $order['discount_amount'] ?? 0;
@@ -168,27 +240,41 @@ $orders = $stmt->fetchAll();
             ?>
                 <tr>
                     <td><?= htmlspecialchars($order['order_number']) ?></td>
-                    <td><?= htmlspecialchars($order['user_name']) ?></td>
-                    <td><?= date('d M Y', strtotime($order['order_date'])) ?></td>
+                    <td><?= htmlspecialchars($order['customer_name']) ?></td>
+                    <td><?= date('d M Y H:i', strtotime($order['order_date'])) ?></td>
                     <td>RM <?= number_format($subtotal, 2) ?></td>
                     <td><?= $discount > 0 ? 'RM ' . number_format($discount, 2) : '-' ?></td>
                     <td><strong>RM <?= number_format($order['total_amount'], 2) ?></strong></td>
                     <td><?= htmlspecialchars($order['voucher_code'] ?? '-') ?></td>
-                    <td><?= ucfirst($order['payment_status']) ?></td>
-                    <td><?= ucfirst($order['status']) ?></td>
+                    <td>
+                        <span class="badge bg-<?= $order['status'] == 'completed' ? 'success' : ($order['status'] == 'cancelled' ? 'danger' : 'warning') ?>">
+                            <?= ucfirst($order['status']) ?>
+                        </span>
+                    </td>
+                    <td>
+                        <?= $order['shipped_date'] ? date('d M Y', strtotime($order['shipped_date'])) : '-' ?>
+                    </td>
+                    <td>
+                        <span class="badge bg-<?= $order['payment_status'] == 'paid' ? 'success' : 'secondary' ?>">
+                            <?= ucfirst($order['payment_status']) ?>
+                        </span>
+                     </div>
+                    </td>
                     <td>
                         <?php if ($order['payment_proof']): ?>
-                            <a href="../assets/uploads/payments/<?= $order['payment_proof'] ?>" target="_blank">View</a>
+                            <button type="button" class="btn btn-link p-0" data-bs-toggle="modal" data-bs-target="#paymentProofModal" onclick="loadPaymentProof(<?= (int)$order['id'] ?>)">
+                                View
+                            </button>
                         <?php else: ?>
                             —
                         <?php endif; ?>
+                     </div>
                     </td>
-                    <td>
+                    <td class="action-cell">
                         <form method="POST" class="d-inline-block me-1">
                             <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
                             <select name="status" class="form-select form-select-sm d-inline-block w-auto">
                                 <option value="pending" <?= $order['status']=='pending' ? 'selected' : '' ?>>Pending</option>
-                                <option value="paid" <?= $order['status']=='paid' ? 'selected' : '' ?>>Paid</option>
                                 <option value="processing" <?= $order['status']=='processing' ? 'selected' : '' ?>>Processing</option>
                                 <option value="shipped" <?= $order['status']=='shipped' ? 'selected' : '' ?>>Shipped</option>
                                 <option value="completed" <?= $order['status']=='completed' ? 'selected' : '' ?>>Completed</option>
@@ -199,16 +285,34 @@ $orders = $stmt->fetchAll();
 
                         <?php if (strtolower($order['payment_status']) == 'paid' && !in_array(strtolower($order['status']), ['completed','cancelled','shipped'])): ?>
                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" 
-                                data-order-id="<?= $order['id'] ?>" data-order-number="<?= htmlspecialchars($order['order_number']) ?>">
+                                    data-order-id="<?= $order['id'] ?>" data-order-number="<?= htmlspecialchars($order['order_number']) ?>">
                                 Cancel Order
                             </button>
                         <?php endif; ?>
+                     </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
         <?php endif; ?>
         </tbody>
     </table>
+</div>
+
+<div class="modal fade" id="paymentProofModal" tabindex="-1" aria-labelledby="paymentProofModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentProofModalLabel">Payment Proof</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="paymentProofContent">
+                <div class="text-center">Loading proof...</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
@@ -247,6 +351,46 @@ $orders = $stmt->fetchAll();
         modalTitle.textContent = 'Cancel Order #' + orderNumber;
         inputOrderId.value = orderId;
     });
+
+    function loadPaymentProof(orderId) {
+        const modalBody = document.getElementById('paymentProofContent');
+        modalBody.innerHTML = '<div class="text-center">Loading proof...</div>';
+
+        fetch('../Customer/getPaymentProof.php?order_id=' + orderId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.file) {
+                    const imgHtml = `
+                        <div class="text-center">
+                            <p><strong>Order Number:</strong> ${escapeHtml(data.order_number)}</p>
+                            <img src="${escapeHtml(data.file)}" class="img-fluid rounded border" alt="Payment Proof" style="max-height: 500px;">
+                            <div class="mt-3">
+                                <a href="${escapeHtml(data.file)}" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-external-link-alt"></i> Open in new tab
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    modalBody.innerHTML = imgHtml;
+                } else {
+                    modalBody.innerHTML = '<div class="alert alert-warning">Payment proof is not available.</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching payment proof:', error);
+                modalBody.innerHTML = '<div class="alert alert-danger">Failed to load payment proof.</div>';
+            });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
 </script>
 
 <?php include '../Customize&Database/footer.php'; ?>
