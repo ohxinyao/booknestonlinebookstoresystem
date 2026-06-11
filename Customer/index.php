@@ -1,8 +1,71 @@
 <?php
 session_start();
 require_once __DIR__ . '/../Customize&Database/setDatabase.php';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_to_cart'])) {
+    $book_id = (int)$_POST['book_id'];
+    $quantity = (int)($_POST['quantity'] ?? 1);
+    $stmt = $pdo->prepare("SELECT stock FROM books WHERE id = ?");
+    $stmt->execute([$book_id]);
+    $stock = (int)$stmt->fetchColumn();
+    if ($stock >= $quantity && $quantity > 0) {
+        if (!isset($_SESSION['cart'])) $_SESSION['cart'] = [];
+        $_SESSION['cart'][$book_id] = ($_SESSION['cart'][$book_id] ?? 0) + $quantity;
+        if (isset($_SESSION['user_id'])) {
+            $userId = $_SESSION['user_id'];
+            $newQty = $_SESSION['cart'][$book_id];
+            $sync = $pdo->prepare("INSERT INTO user_cart (user_id, book_id, quantity) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE quantity = ?");
+            $sync->execute([$userId, $book_id, $newQty, $newQty]);
+        }
+        $_SESSION['flash_success'] = "Book added to cart!";
+    } else {
+        $_SESSION['flash_error'] = "Insufficient stock.";
+    }
+    header("Location: index.php");
+    exit;
+}
+
 include '../Customize&Database/header.php';
+
+if (isset($_SESSION['flash_success'])) {
+    echo "<div class='alert alert-success'>{$_SESSION['flash_success']}</div>";
+    unset($_SESSION['flash_success']);
+}
+if (isset($_SESSION['flash_error'])) {
+    echo "<div class='alert alert-danger'>{$_SESSION['flash_error']}</div>";
+    unset($_SESSION['flash_error']);
+}
 ?>
+
+<style>
+    .card-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: auto;
+    }
+    .card-buttons .btn {
+        flex: 1;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 0.5rem 0.25rem;
+        font-size: 0.85rem;
+        border-radius: 30px;
+    }
+    .card-buttons form {
+        flex: 1;
+        margin: 0;
+    }
+    .card-buttons form button {
+        width: 100%;
+    }
+    .book-card .card-body {
+        display: flex;
+        flex-direction: column;
+    }
+</style>
 
 <div class="row">
     <div class="col-md-12">
@@ -67,6 +130,7 @@ include '../Customize&Database/header.php';
     $bestStmt = $pdo->query("SELECT * FROM books ORDER BY sales DESC LIMIT 4");
     while ($bestseller = $bestStmt->fetch(PDO::FETCH_ASSOC)):
         $stock = $bestseller['stock'];
+        $disableCart = ($stock <= 0);
         if ($stock <= 0) {
             $stockHtml = '<p class="text-danger fw-bold mb-0"><i class="fas fa-times-circle"></i> Out of Stock</p>';
         } elseif ($stock <= 5) {
@@ -83,7 +147,20 @@ include '../Customize&Database/header.php';
                 <p class="card-text">RM <?= number_format($bestseller['price'], 2) ?></p>
                 <?= $stockHtml ?>
                 <p class="card-text text-muted small mt-2"><i class="fas fa-chart-line"></i> Sold: <?= (int)$bestseller['sales'] ?> books</p>
-                <a href="bookDetail.php?id=<?= $bestseller['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
+                <div class="card-buttons">
+                    <a href="bookDetail.php?id=<?= $bestseller['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
+                    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'customer'): ?>
+                        <form method="POST">
+                            <input type="hidden" name="book_id" value="<?= $bestseller['id'] ?>">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" name="add_to_cart" class="btn btn-sm btn-primary w-100" <?= $disableCart ? 'disabled' : '' ?>>
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <button class="btn btn-sm btn-secondary w-100" disabled title="Please login to add to cart">Add to Cart</button>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
@@ -96,6 +173,7 @@ include '../Customize&Database/header.php';
     $stmt = $pdo->query("SELECT * FROM books ORDER BY created_at DESC LIMIT 4");
     while ($book = $stmt->fetch(PDO::FETCH_ASSOC)):
         $stock = $book['stock'];
+        $disableCart = ($stock <= 0);
         if ($stock <= 0) {
             $stockHtml = '<p class="text-danger fw-bold mb-0"><i class="fas fa-times-circle"></i> Out of Stock</p>';
         } elseif ($stock <= 5) {
@@ -111,7 +189,20 @@ include '../Customize&Database/header.php';
                 <h5 class="card-title"><?= htmlspecialchars($book['title']) ?></h5>
                 <p class="card-text">RM <?= number_format($book['price'], 2) ?></p>
                 <?= $stockHtml ?>
-                <a href="bookDetail.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
+                <div class="card-buttons">
+                    <a href="bookDetail.php?id=<?= $book['id'] ?>" class="btn btn-sm btn-primary">View Details</a>
+                    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'customer'): ?>
+                        <form method="POST">
+                            <input type="hidden" name="book_id" value="<?= $book['id'] ?>">
+                            <input type="hidden" name="quantity" value="1">
+                            <button type="submit" name="add_to_cart" class="btn btn-sm btn-primary w-100" <?= $disableCart ? 'disabled' : '' ?>>
+                                <i class="fas fa-cart-plus"></i> Add to Cart
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <button class="btn btn-sm btn-secondary w-100" disabled title="Please login to add to cart">Add to Cart</button>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
