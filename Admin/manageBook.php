@@ -20,6 +20,9 @@ if (isset($_SESSION['flash_error'])) {
     unset($_SESSION['flash_error']);
 }
 
+$searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filterCategory = isset($_GET['filter_category']) ? trim($_GET['filter_category']) : '';
+
 if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_POST['stock_delta'])) {
     $book_id = (int)$_POST['book_id'];
     $delta = (int)$_POST['stock_delta'];
@@ -35,7 +38,10 @@ if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_P
     } else {
         $_SESSION['flash_error'] = "No change (book added = 0).";
     }
-    header("Location: manageBook.php");
+    $redirectUrl = "manageBook.php";
+    if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+    if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+    header("Location: $redirectUrl");
     exit;
 }
 
@@ -50,16 +56,19 @@ if (isset($_GET['delete'])) {
     $stmt = $pdo->prepare("DELETE FROM books WHERE id = ?");
     $stmt->execute([$id]);
     $_SESSION['flash_success'] = "Book deleted successfully.";
-    header("Location: manageBook.php");
+    $redirectUrl = "manageBook.php";
+    if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+    if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+    header("Location: $redirectUrl");
     exit;
 }
-    
+
 if (isset($_POST['add_category']) || isset($_POST['edit_category'])) {
     $categoryName = trim($_POST['category_name']);
     $editId = (int)($_POST['edit_category_id'] ?? 0);
-    
+
     if ($categoryName === '') {
-        $_SESSION['flash_error'] = 'Category name cannot be empty.';
+        $_SESSION['flash_error'] = 'Category name cannot be empty.';  
     } else {
         if ($editId > 0) {
             $check = $pdo->prepare("SELECT id FROM categories WHERE name = ? AND id != ?");
@@ -94,7 +103,10 @@ if (isset($_POST['add_category']) || isset($_POST['edit_category'])) {
             }
         }
     }
-    header("Location: manageBook.php");
+    $redirectUrl = "manageBook.php";
+    if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+    if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+    header("Location: $redirectUrl");
     exit;
 }
 
@@ -119,7 +131,10 @@ if (isset($_GET['delete_category'])) {
             $_SESSION['flash_error'] = 'Failed to delete category.';
         }
     }
-    header("Location: manageBook.php");
+    $redirectUrl = "manageBook.php";
+    if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+    if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+    header("Location: $redirectUrl");
     exit;
 }
 
@@ -171,19 +186,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['quick_update_stock'])
                 $image = '/finalproject/booknestonlinebookstoresystem/Image/' . $filename;
             } else {
                 $_SESSION['flash_error'] = "Failed to upload image.";
-                header("Location: manageBook.php");
+                $redirectUrl = "manageBook.php";
+                if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+                if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+                header("Location: $redirectUrl");
                 exit;
             }
         } else {
             $_SESSION['flash_error'] = "Invalid image format. Only JPG, PNG, GIF allowed.";
-            header("Location: manageBook.php");
+            $redirectUrl = "manageBook.php";
+            if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+            if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+            header("Location: $redirectUrl");
             exit;
         }
     }
 
     if (empty($title) || empty($author) || $price <= 0) {
         $_SESSION['flash_error'] = "Title, author and positive price are required.";
-        header("Location: manageBook.php");
+        $redirectUrl = "manageBook.php";
+        if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+        if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+        header("Location: $redirectUrl");
         exit;
     }
 
@@ -196,7 +220,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !isset($_POST['quick_update_stock'])
         $stmt->execute([$title, $author, $description, $category, $price, $stock, $min_stock, $image]);
         $_SESSION['flash_success'] = "Book added successfully.";
     }
-    header("Location: manageBook.php");
+    $redirectUrl = "manageBook.php";
+    if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
+    if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+    header("Location: $redirectUrl");
     exit;
 }
 
@@ -225,7 +252,22 @@ if (empty($allCategories)) {
     $allCategories = $pdo->query("SELECT name FROM categories ORDER BY name")->fetchAll(PDO::FETCH_COLUMN);
 }
 
-$books = $pdo->query("SELECT * FROM books ORDER BY id ASC")->fetchAll();
+$sql = "SELECT * FROM books WHERE 1=1";
+$params = [];
+if (!empty($searchKeyword)) {
+    $sql .= " AND (title LIKE ? OR author LIKE ?)";
+    $params[] = "%$searchKeyword%";
+    $params[] = "%$searchKeyword%";
+}
+if (!empty($filterCategory)) {
+    $sql .= " AND category = ?";
+    $params[] = $filterCategory;
+}
+$sql .= " ORDER BY id ASC";
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$books = $stmt->fetchAll();
+
 $booksByCategory = [];
 foreach ($books as $book) {
     $cat = $book['category'] ?: 'Uncategorized';
@@ -234,7 +276,6 @@ foreach ($books as $book) {
     }
     $booksByCategory[$cat][] = $book;
 }
-
 ?>
 
 <style>
@@ -369,6 +410,54 @@ foreach ($books as $book) {
     .quick-stock-form input {
         width: 80px;
     }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .toolbar-left {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .toolbar-right {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        width: 200px;
+    }
+
+    .search-input-group {
+        width: 300px;
+    }
+
+    @media (max-width: 768px) {
+        .toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .toolbar-left,
+        .toolbar-right {
+            width: 100%;
+        }
+
+        .filter-select,
+        .search-input-group {
+            width: 100%;
+        }
+    }
 </style>
 
 <div class="page-shell">
@@ -418,7 +507,7 @@ foreach ($books as $book) {
                                         <button type="button" class="btn btn-link p-0 text-primary text-decoration-none" data-category='<?= json_encode($cat, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>' onclick="openCategoryEdit(this); return false;" title="Edit category">
                                             <i class="fas fa-pencil-alt"></i>
                                         </button>
-                                        <a href="?delete_category=<?= (int)$cat['id'] ?>" class="text-danger text-decoration-none" onclick="return confirm('Delete this category? It cannot be used by any book.')" title="Delete category">
+                                        <a href="?delete_category=<?= (int)$cat['id'] ?><?= $searchKeyword ? '&search=' . urlencode($searchKeyword) : '' ?><?= $filterCategory ? '&filter_category=' . urlencode($filterCategory) : '' ?>" class="text-danger text-decoration-none" onclick="return confirm('Delete this category? It cannot be used by any book.')" title="Delete category">
                                             <i class="fas fa-times"></i>
                                         </a>
                                     <?php endif; ?>
@@ -431,68 +520,117 @@ foreach ($books as $book) {
         </div>
     </div>
 
-<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="clearForm()">
-    <i class="fas fa-plus-circle"></i> Add New Book
-</button>
-
-<?php foreach ($booksByCategory as $catName => $catBooks): ?>
-    <?php if (empty($catBooks)) continue; ?>
-    <div class="category-section">
-        <div class="category-header">
-            <i class="fas fa-folder-open me-2"></i> <?= htmlspecialchars($catName) ?>
-            <span class="badge bg-light text-dark ms-2"><?= count($catBooks) ?> books</span>
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="clearForm()">
+                <i class="fas fa-plus-circle"></i> Add New Book
+            </button>
         </div>
-        <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Image</th>
-                        <th>Title</th>
-                        <th>Author</th>
-                        <th>Price</th>
-                        <th>Latest Stock</th>
-                        <th>Min Stock</th>
-                        <th>New Stock (+/−)</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $sn = 1; foreach ($catBooks as $book): $isLowStock = ($book['stock'] <= $book['min_stock']); ?>
-                        <tr class="<?= $isLowStock ? 'low-stock' : '' ?>">
-                            <td><?= $sn++ ?></td>
-                            <td><img src="<?= htmlspecialchars($book['image']) ?>" class="book-thumb" onerror="this.src='/finalproject/booknestonlinebookstoresystem/Image/default.jpg'; this.style.opacity='0.7';"></td>
-                            <td><?= htmlspecialchars($book['title']) ?></td>
-                            <td><?= htmlspecialchars($book['author']) ?></td>
-                            <td>RM <?= number_format($book['price'], 2) ?></td>
-                            <td><span class="badge <?= $isLowStock ? 'bg-danger' : 'bg-secondary' ?>"><?= $book['stock'] ?></span></td>
-                            <td><?= $book['min_stock'] ?></td>
-                            <td>
-                                <form method="POST" class="quick-stock-form">
-                                    <input type="hidden" name="book_id" value="<?= $book['id'] ?>">
-                                    <input type="number" name="stock_delta" value="0" placeholder="+/-" class="form-control form-control-sm" required>
-                                    <button type="submit" name="quick_update_stock" class="btn btn-sm btn-outline-primary">Update</button>
-                                </form>
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="editBook(<?= htmlspecialchars(json_encode($book)) ?>); return false;">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
-                                    <?php if ($userRole === 'admin'): ?>
-                                        <a href="?delete=<?= $book['id'] ?>" class="btn btn-sm btn-danger confirm-delete" onclick="return confirm('Delete this book?')">
-                                            <i class="fas fa-trash-alt"></i> Delete
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
+        <div class="toolbar-right">
+            <form method="GET" class="d-flex gap-2 align-items-center">
+                <?php if ($searchKeyword): ?>
+                    <input type="hidden" name="search" value="<?= htmlspecialchars($searchKeyword) ?>">
+                <?php endif; ?>
+                <select name="filter_category" class="form-select filter-select" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    <?php foreach ($allCategories as $cat): ?>
+                        <option value="<?= htmlspecialchars($cat) ?>" <?= $filterCategory == $cat ? 'selected' : '' ?>><?= htmlspecialchars($cat) ?></option>
                     <?php endforeach; ?>
-                </tbody>
-            </table>
+                </select>
+            </form>
+            <form method="GET" class="d-flex gap-2 align-items-center">
+                <?php if ($filterCategory): ?>
+                    <input type="hidden" name="filter_category" value="<?= htmlspecialchars($filterCategory) ?>">
+                <?php endif; ?>
+                <div class="input-group search-input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search by title or author..." value="<?= htmlspecialchars($searchKeyword) ?>">
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                    <?php if ($searchKeyword || $filterCategory): ?>
+                        <a href="manageBook.php" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+                    <?php endif; ?>
+                </div>
+            </form>
         </div>
     </div>
-<?php endforeach; ?>
+
+    <?php if ($searchKeyword): ?>
+        <div class="alert alert-info">
+            <i class="fas fa-search"></i> Search results for: <strong>"<?= htmlspecialchars($searchKeyword) ?>"</strong>
+            <?php if ($filterCategory): ?>
+                <span class="ms-2">| Category: <strong><?= htmlspecialchars($filterCategory) ?></strong></span>
+            <?php endif; ?>
+        </div>
+    <?php elseif ($filterCategory): ?>
+        <div class="alert alert-info">
+            <i class="fas fa-filter"></i> Filtering by category: <strong><?= htmlspecialchars($filterCategory) ?></strong>
+            <a href="manageBook.php" class="float-end">Clear filter</a>
+        </div>
+    <?php endif; ?>
+
+    <?php if (empty($booksByCategory)): ?>
+        <div class="alert alert-warning">No books found matching your criteria.</div>
+    <?php else: ?>
+        <?php foreach ($booksByCategory as $catName => $catBooks): ?>
+            <?php if (empty($catBooks)) continue; ?>
+            <div class="category-section">
+                <div class="category-header">
+                    <i class="fas fa-folder-open me-2"></i> <?= htmlspecialchars($catName) ?>
+                    <span class="badge bg-light text-dark ms-2"><?= count($catBooks) ?> books</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover align-middle mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Price</th>
+                                <th>Latest Stock</th>
+                                <th>Min Stock</th>
+                                <th>New Stock (+/-)</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $sn = 1;
+                            foreach ($catBooks as $book): $isLowStock = ($book['stock'] <= $book['min_stock']); ?>
+                                <tr class="<?= $isLowStock ? 'low-stock' : '' ?>">
+                                    <td><?= $sn++ ?></td>
+                                    <td><img src="<?= htmlspecialchars($book['image']) ?>" class="book-thumb" onerror="this.src='/finalproject/booknestonlinebookstoresystem/Image/default.jpg'; this.style.opacity='0.7';"></td>
+                                    <td><?= htmlspecialchars($book['title']) ?></td>
+                                    <td><?= htmlspecialchars($book['author']) ?></td>
+                                    <td>RM <?= number_format($book['price'], 2) ?></td>
+                                    <td><span class="badge <?= $isLowStock ? 'bg-danger' : 'bg-secondary' ?>"><?= $book['stock'] ?></span></td>
+                                    <td><?= $book['min_stock'] ?></td>
+                                    <td>
+                                        <form method="POST" class="quick-stock-form">
+                                            <input type="hidden" name="book_id" value="<?= $book['id'] ?>">
+                                            <input type="number" name="stock_delta" value="0" placeholder="+/-" class="form-control form-control-sm" required>
+                                            <button type="submit" name="quick_update_stock" class="btn btn-sm btn-outline-primary">Update</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#bookModal" onclick="editBook(<?= htmlspecialchars(json_encode($book)) ?>); return false;">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <?php if ($userRole === 'admin'): ?>
+                                                <a href="?delete=<?= $book['id'] ?><?= $searchKeyword ? '&search=' . urlencode($searchKeyword) : '' ?><?= $filterCategory ? '&filter_category=' . urlencode($filterCategory) : '' ?>" class="btn btn-sm btn-danger confirm-delete" onclick="return confirm('Delete this book?')">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </a>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</div>
 
 <div class="modal fade" id="bookModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -568,7 +706,7 @@ foreach ($books as $book) {
         document.getElementById('stockFieldRow').style.display = 'block';
         document.getElementById('imagePreviewContainer').style.display = 'none';
         document.getElementById('imagePreview').src = '';
-        resetCategoryForm(); 
+        resetCategoryForm();
     }
 
     function resetCategoryForm() {
@@ -586,7 +724,10 @@ foreach ($books as $book) {
         document.getElementById('categorySubmitBtn').name = 'edit_category';
         document.getElementById('categoryNameInput').value = category.name;
         document.getElementById('editCategoryIdField').value = category.id;
-        document.querySelector('.category-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelector('.category-card').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
         document.getElementById('categoryNameInput').focus();
         document.getElementById('categoryNameInput').select();
     }
