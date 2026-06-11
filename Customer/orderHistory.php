@@ -71,7 +71,6 @@ if (isset($_SESSION['flash_error'])) {
                         <?php if ($order['status'] == 'cancelled' && !empty($order['cancellation_reason'])): ?>
                             <br><small class="text-muted">Reason: <?= htmlspecialchars($order['cancellation_reason']) ?></small>
                         <?php endif; ?>
-                    </div>
                     </td>
                     <td>
                         <?= $order['shipped_date'] ? date('d M Y', strtotime($order['shipped_date'])) : '-' ?>
@@ -85,7 +84,6 @@ if (isset($_SESSION['flash_error'])) {
                         <?php else: ?>
                             Not uploaded
                         <?php endif; ?>
-                    </div>
                     </td>
                     <td class="align-middle">
                         <div class="d-flex flex-column gap-2">
@@ -105,8 +103,8 @@ if (isset($_SESSION['flash_error'])) {
                                 </a>
                             <?php endif; ?>
                         </div>
-                    </div>
-                </table>
+                    </td>
+                </tr>
             <?php endforeach; ?>
             </tbody>
         </table>
