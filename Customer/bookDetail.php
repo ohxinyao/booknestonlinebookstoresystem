@@ -71,7 +71,24 @@ if ($stock <= 0) {
 } else {
     $stockBadge = '<span class="badge bg-success">In Stock: ' . $stock . '</span>';
 }
+
+$recommended = [];
+$sameCatStmt = $pdo->prepare("SELECT * FROM books WHERE category = ? AND id != ? LIMIT 4");
+$sameCatStmt->execute([$book['category'], $book_id]);
+$recommended = $sameCatStmt->fetchAll();
+
+if (count($recommended) < 4) {
+    $needed = 4 - count($recommended);
+    $excludeIds = [$book_id];
+    foreach ($recommended as $r) $excludeIds[] = $r['id'];
+    $placeholders = implode(',', array_fill(0, count($excludeIds), '?'));
+    $otherStmt = $pdo->prepare("SELECT * FROM books WHERE id NOT IN ($placeholders) ORDER BY created_at DESC LIMIT $needed");
+    $otherStmt->execute($excludeIds);
+    $more = $otherStmt->fetchAll();
+    $recommended = array_merge($recommended, $more);
+}
 ?>
+
 <div class="mb-3">
     <a href="selectBook.php" class="btn btn-outline-secondary">
         <i class="fas fa-arrow-left"></i> Back to Books
@@ -178,4 +195,27 @@ if ($stock <= 0) {
         <?php endif; ?>
     </div>
 </div>
+
+<?php if (!empty($recommended)): ?>
+<div class="mt-5">
+    <h3>You May Also Like</h3>
+    <div class="row">
+        <?php foreach ($recommended as $rec): ?>
+            <div class="col-md-3 mb-4" onclick="location.href='bookDetail.php?id=<?= $rec['id'] ?>';" style="cursor: pointer;">
+                <div class="card h-100 book-card">
+                    <img src="<?= htmlspecialchars($rec['image']) ?>" class="card-img-top" style="height:200px; object-fit:cover;">
+                    <div class="card-body">
+                        <h5 class="card-title"><?= htmlspecialchars($rec['title']) ?></h5>
+                        <p class="card-text">by <?= htmlspecialchars($rec['author']) ?></p>
+                        <p class="card-text"><strong>RM <?= number_format($rec['price'], 2) ?></strong></p>
+                        <p class="card-text mt-2"><small class="star-rating"><i class="fas fa-star"></i> <?= number_format($rec['rating_avg'],1) ?></small> (<?= $rec['rating_count'] ?> reviews)</p>
+                        <a href="bookDetail.php?id=<?= $rec['id'] ?>" class="btn btn-sm btn-primary" onclick="event.stopPropagation();">View Details</a>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php include '../Customize&Database/footer.php'; ?>
