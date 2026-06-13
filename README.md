@@ -7,7 +7,7 @@ BookNest is an online bookstore system that allows customers to browse books, ad
 The system is deployed online. You can access the live version at:
 https://booknestonlinebookstore.infinityfreeapp.com/finalproject/booknestonlinebookstoresystem/Customer/index.php
 
-# Note: Online payment (ToyyibPay) is only available on the live server due to callback URL requirements. Localhost does not support payment callbacks.
+## Note: Online payment (ToyyibPay) is only available on the live server due to callback URL requirements. Localhost does not support payment callbacks.
 
 ## Technologies Used
 - PHP 
