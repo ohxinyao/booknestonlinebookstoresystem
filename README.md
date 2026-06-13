@@ -82,6 +82,7 @@ $password = '';
 ## Project Structure
 
 ..htdocs/finalproject/booknestonlinebookstoresystem/
+
 ├── Admin/           (Admin panel)
 
 ├── Staff/           (Staff panel)
