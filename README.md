@@ -94,7 +94,7 @@ $password = '';
 
 ├── Image/           (Book images & background images)
 
-├── assets/uploads/payments        (Uploaded payment proofs)
+├── assets/uploads/payments/        (Uploaded payment proofs)
 
 ├── Vendor/phpMailer/   (Application for PHPMailer)
 
