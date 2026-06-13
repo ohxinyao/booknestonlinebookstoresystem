@@ -12,9 +12,10 @@ https://booknestonlinebookstore.infinityfreeapp.com/finalproject/booknestonlineb
 ## Technologies Used
 - PHP 
 - MySQL (phpMyAdmin)
-- Bootstrap 5
+- Bootstrap
 - HTML/CSS/JavaScript
 - ToyyibPay Payment Gateway (Online Payment)
+- PHPMailer (Email notification)
 
 ## Installation Guide (Localhost)
 
