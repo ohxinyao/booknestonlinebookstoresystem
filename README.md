@@ -30,8 +30,11 @@ git clone : https://github.com/ohxinyao/booknestonlinebookstoresystem.git
 Edit the file: Customize&Database/setDatabase.php
 
 $host = 'localhost';
+
 $dbname = 'booknest_database';
+
 $username = 'root';
+
 $password = '';
 
 ### Step 4: Run the Project
