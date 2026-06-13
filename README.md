@@ -90,7 +90,7 @@ $password = '';
 
 ├── Customer/        (Customer pages)
 
-├── Customize&Database/  (Database config & shared files)
+├── Customize&Database/  (Database config & shared files include sql file)
 
 ├── Image/           (Book images & background images)
 
