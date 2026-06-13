@@ -83,13 +83,19 @@ $password = '';
 
 ..htdocs/finalproject/booknestonlinebookstoresystem/
 ├── Admin/           (Admin panel)
+
 ├── Staff/           (Staff panel)
+
 ├── Customer/        (Customer pages)
+
 ├── Customize&Database/  (Database config & shared files)
-├── Image/           (Book images)
-├── Payment/         (ToyyibPay integration)
-├── assets/          (Uploaded payment proofs)
-└── database/        (SQL file)
+
+├── Image/           (Book images & background images)
+
+├── assets/uploads/payments        (Uploaded payment proofs)
+
+├── Vendor/phpMailer/   (Application for PHPMailer)
+
 
 ## Localhost vs Live Server Differences
 
