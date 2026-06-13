@@ -3,13 +3,20 @@
 ## Introduction
 BookNest is an online bookstore system that allows customers to browse books, add to cart, make payments, and leave reviews. Staff can manage orders and books, while admin has full control over users, orders, and reports.
 
+## Live Demo (Production Server)
+The system is deployed online. You can access the live version at:
+https://booknestonlinebookstore.infinityfreeapp.com/finalproject/booknestonlinebookstoresystem/Customer/index.php
+
+# Note: Online payment (ToyyibPay) is only available on the live server due to callback URL requirements. Localhost does not support payment callbacks.
+
 ## Technologies Used
 - PHP 
 - MySQL (phpMyAdmin)
 - Bootstrap 5
 - HTML/CSS/JavaScript
+- ToyyibPay Payment Gateway (Online Payment)
 
-## Installation Guide
+## Installation Guide (Localhost)
 
 ### Step 1: Clone the Repository
 git clone https://github.com/your-username/booknestonlinebookstoresystem.git
@@ -32,26 +39,26 @@ $password = '';
 - Access the website at: 
   http://localhost/finalproject/booknestonlinebookstoresystem/Customer/index.php
 
+### Important Note for Localhost
+- Online payment (ToyyibPay) is disabled on localhost because payment callbacks require a public URL.
+- To test online payment, please use the live server link above.
+- On localhost, customers can still place orders using the "Manual Payment" option (upload bank transfer proof).
+
 ## Default Login Accounts
 
-Role: Customer
-Email: phangyuxue@gmail.com
-Password: 12345678
-
-Role: Staff
-Email: staff123@gmail.com
-Password: 0123456789
-
-Role: Admin
-Email: phangyuxue@graduate.utm.my
-Password: 12345678
+| Role | Email | Password |
+|------|-------|----------|
+| Customer | phangyuxue@gmail.com | 12345678 |
+| Staff | staff123@gmail.com | 0123456789 |
+| Admin | phangyuxue@graduate.utm.my | 12345678 |
 
 ## User Roles & Features
 
 ### Customer
 - Browse and search books
 - Add to cart and checkout
-- Upload payment proof
+- Online payment via ToyyibPay (on live server)
+- Manual payment with bank transfer proof upload (localhost & live server)
 - Leave reviews and ratings
 - Wishlist management
 - Order history
@@ -79,5 +86,12 @@ booknestonlinebookstoresystem/
 ├── assets/          (Uploaded payment proofs)
 └── database/        (SQL file)
 
-## Contact
-For any issues, please contact: [your email]
+## Localhost vs Live Server Differences
+
+| Feature | Localhost | Live Server |
+|---------|-----------|-------------|
+| Browse books | ✅ Yes | ✅ Yes |
+| Add to cart | ✅ Yes | ✅ Yes |
+| Manual payment (upload proof) | ✅ Yes | ✅ Yes |
+| Online payment (ToyyibPay) | ❌ No (callback requires public URL) | ✅ Yes |
+| Full system functionality | ✅ Yes (except online payment) | ✅ Yes |
