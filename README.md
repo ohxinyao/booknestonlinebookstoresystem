@@ -3,7 +3,7 @@
 ## Introduction
 BookNest is an online bookstore system that allows customers to browse books, add to cart, make payments, and leave reviews. Staff can manage orders and books, while admin has full control over users, orders, and reports.
 
-## Live Demo (Production Server)
+## Live Demo (Domain Server)
 The system is deployed online. You can access the live version at:
 https://booknestonlinebookstore.infinityfreeapp.com/finalproject/booknestonlinebookstoresystem/Customer/index.php
 
