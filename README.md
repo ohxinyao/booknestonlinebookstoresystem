@@ -35,7 +35,7 @@ $username = 'root';
 $password = '';
 
 ### Step 4: Run the Project
-- Place the project folder in htdocs (for XAMPP) or www (for WAMP)
+- Place the project folder in htdocs (for XAMPP)
 - Access the website at: 
   http://localhost/finalproject/booknestonlinebookstoresystem/Customer/index.php
 
@@ -48,9 +48,9 @@ $password = '';
 
 | Role | Email | Password |
 |------|-------|----------|
-| Customer | phangyuxue@gmail.com | 12345678 |
-| Staff | staff123@gmail.com | 0123456789 |
-| Admin | phangyuxue@graduate.utm.my | 12345678 |
+| Customer | phangyuxue@gmail.com | Phang12! |
+| Staff | projectfinal432@gmail.com | Projectfinal432! |
+| Admin | phangyuxue@graduate.utm.my | Admin321! |
 
 ## User Roles & Features
 
@@ -62,11 +62,13 @@ $password = '';
 - Leave reviews and ratings
 - Wishlist management
 - Order history
+- Live chat (Sender/Receiver)
 
 ### Staff
 - Manage books (add/edit/delete)
 - Update order status
 - Cancel orders
+- Live Chat (Sender/Receiver)
 
 ### Admin
 - Manage users (customers & staff)
@@ -76,7 +78,7 @@ $password = '';
 
 ## Project Structure
 
-booknestonlinebookstoresystem/
+..htdocs/finalproject/booknestonlinebookstoresystem/
 ├── Admin/           (Admin panel)
 ├── Staff/           (Staff panel)
 ├── Customer/        (Customer pages)
