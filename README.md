@@ -21,7 +21,7 @@ https://booknestonlinebookstore.infinityfreeapp.com/finalproject/booknestonlineb
 
 ### Step 1: Clone the Repository
 ```bash
-git clone : https://github.com/ohxinyao/booknestonlinebookstoresystem.git
+git clone https://github.com/ohxinyao/booknestonlinebookstoresystem.git
 ```
 ### Step 2: Setup Database
 - Open phpMyAdmin
