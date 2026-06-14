@@ -20,8 +20,9 @@ https://booknestonlinebookstore.infinityfreeapp.com/finalproject/booknestonlineb
 ## Installation Guide (Localhost)
 
 ### Step 1: Clone the Repository
+```bash
 git clone : https://github.com/ohxinyao/booknestonlinebookstoresystem.git
-
+```
 ### Step 2: Setup Database
 - Open phpMyAdmin
 - Create a new database named booknest_database
