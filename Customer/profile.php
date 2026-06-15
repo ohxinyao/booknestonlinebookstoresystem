@@ -7,6 +7,7 @@ require_once '../Customize&Database/function.php';
 requireLogin();
 
 $userId = (int) $_SESSION['user_id'];
+$userRole = $_SESSION['user_role'] ?? 'customer';
 
 $stmt = $pdo->prepare("SELECT id, name, email, phone, address FROM users WHERE id = ?");
 $stmt->execute([$userId]);
@@ -24,14 +25,14 @@ $success = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = sanitize($_POST['name'] ?? '');
     $email = sanitize($_POST['email'] ?? '');
-    $phone = sanitize($_POST['phone'] ?? '');
-    $address = sanitize($_POST['address'] ?? '');
+    $phone = ($userRole === 'customer') ? sanitize($_POST['phone'] ?? '') : $user['phone'];
+    $address = ($userRole === 'customer') ? sanitize($_POST['address'] ?? '') : $user['address'];
 
     if ($name === '') {
         $error = 'Full name is required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid email address.';
-    } elseif ($phone !== '' && !preg_match('/^\+?[0-9\s-]{7,15}$/', $phone)) {
+    } elseif ($userRole === 'customer' && $phone !== '' && !preg_match('/^\+?[0-9\s-]{7,15}$/', $phone)) {
         $error = 'Please enter a valid phone number.';
     } else {
         $checkStmt = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
@@ -56,13 +57,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 include '../Customize&Database/header.php';
+
+$cardColor = 'bg-primary';
+if ($userRole === 'staff') {
+    $cardColor = 'bg-success';
+} elseif ($userRole === 'admin') {
+    $cardColor = 'bg-danger';
+}
 ?>
+
+<style>
+    .profile-card .card-header {
+        background: linear-gradient(135deg,
+                <?php if ($userRole === 'staff'): ?>#198754, #0d6e3a<?php
+                                                                elseif ($userRole === 'admin'): ?>#dc3545, #a71d2a<?php
+                                                                else: ?>#b85c38, #8f3f25<?php endif; ?>);
+    }
+</style>
 
 <div class="row justify-content-center">
     <div class="col-lg-8">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Edit Profile</h4>
+        <div class="card shadow-sm border-0 profile-card">
+            <div class="card-header <?= $cardColor ?> text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>
+                    Edit Profile
+                    <?php if ($userRole !== 'customer'): ?>
+                        <span class="badge bg-light text-dark ms-2"><?= ucfirst($userRole) ?> Account</span>
+                    <?php endif; ?>
+                </h4>
             </div>
             <div class="card-body">
                 <?php if (!empty($error)): ?>
@@ -81,16 +104,23 @@ include '../Customize&Database/header.php';
                         <label class="form-label">Email Address</label>
                         <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Phone Number</label>
-                        <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 0123456789">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Address</label>
-                        <input type="text" name="address" class="form-control" value="<?= htmlspecialchars($user['address'] ?? '') ?>" placeholder="Your shipping address">
-                    </div>
-                    <div class="col-12 d-flex gap-2">
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Changes</button>
+
+                    <?php if ($userRole === 'customer'): ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <input type="text" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 0123456789">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Shipping Address</label>
+                            <input type="text" name="address" class="form-control" value="<?= htmlspecialchars($user['address'] ?? '') ?>" placeholder="Your shipping address">
+                        </div>
+                    <?php else: ?>
+                    <?php endif; ?>
+
+                    <div class="col-12 d-flex gap-2 justify-content-center">
+                        <button type="submit" class="btn btn-<?= $userRole === 'staff' ? 'success' : ($userRole === 'admin' ? 'danger' : 'primary') ?>">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
                         <a href="index.php" class="btn btn-outline-secondary">Cancel</a>
                     </div>
                 </form>
