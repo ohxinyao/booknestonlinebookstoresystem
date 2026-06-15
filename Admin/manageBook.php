@@ -22,6 +22,7 @@ if (isset($_SESSION['flash_error'])) {
 
 $searchKeyword = isset($_GET['search']) ? trim($_GET['search']) : '';
 $filterCategory = isset($_GET['filter_category']) ? trim($_GET['filter_category']) : '';
+$restock_id = isset($_GET['restock']) ? (int)$_GET['restock'] : 0;
 
 if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_POST['stock_delta'])) {
     $book_id = (int)$_POST['book_id'];
@@ -41,6 +42,7 @@ if (isset($_POST['quick_update_stock']) && isset($_POST['book_id']) && isset($_P
     $redirectUrl = "manageBook.php";
     if ($searchKeyword) $redirectUrl .= "?search=" . urlencode($searchKeyword);
     if ($filterCategory) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?filter_category=" : "&filter_category=") . urlencode($filterCategory);
+    if ($restock_id) $redirectUrl .= (strpos($redirectUrl, '?') === false ? "?restock=" : "&restock=") . $restock_id;
     header("Location: $redirectUrl");
     exit;
 }
@@ -68,7 +70,7 @@ if (isset($_POST['add_category']) || isset($_POST['edit_category'])) {
     $editId = (int)($_POST['edit_category_id'] ?? 0);
 
     if ($categoryName === '') {
-        $_SESSION['flash_error'] = 'Category name cannot be empty.';  
+        $_SESSION['flash_error'] = 'Category name cannot be empty.';
     } else {
         if ($editId > 0) {
             $check = $pdo->prepare("SELECT id FROM categories WHERE name = ? AND id != ?");
@@ -429,17 +431,118 @@ foreach ($books as $book) {
 
     .toolbar-right {
         display: flex;
-        gap: 0.5rem;
+        gap: 1rem;
         align-items: center;
         flex-wrap: wrap;
     }
 
-    .filter-select {
-        width: 200px;
+    .filter-form {
+        margin: 0;
     }
 
-    .search-input-group {
-        width: 300px;
+    .filter-select {
+        min-width: 220px;
+        width: auto;
+        height: 40px;
+        padding: 0 2rem 0 0.75rem;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        border: 1px solid #ced4da;
+        background-color: white;
+        cursor: pointer;
+    }
+
+    .filter-select:focus {
+        border-color: #b85c38;
+        outline: none;
+        box-shadow: 0 0 0 0.2rem rgba(184, 92, 56, 0.25);
+    }
+
+    .filter-select option {
+        white-space: normal;
+        word-break: break-word;
+        padding: 4px 8px;
+    }
+
+    .search-form {
+        margin: 0;
+    }
+
+    .search-wrapper {
+        display: flex;
+        align-items: center;
+        height: 40px;
+        min-width: 220px;
+        width: auto;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+        transition: all 0.2s ease;
+    }
+
+    .search-wrapper:focus-within {
+        border-color: #b85c38;
+        box-shadow: 0 0 0 0.2rem rgba(184, 92, 56, 0.25);
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 140px;
+        height: 100%;
+        padding: 0 0.75rem;
+        border: none;
+        outline: none;
+        font-size: 0.9rem;
+        background: transparent;
+    }
+
+    .search-btn {
+        width: 44px;
+        height: 100%;
+        border: none;
+        background: linear-gradient(135deg, #b85c38, #8f3f25);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .search-btn:hover {
+        background: linear-gradient(135deg, #c4663f, #7b351f);
+    }
+
+    .search-btn i {
+        margin: 0;
+        font-size: 1rem;
+    }
+
+    .clear-btn {
+        width: 44px;
+        height: 100%;
+        border: none;
+        background: #f8f9fa;
+        color: #6c757d;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border-left: 1px solid #ced4da;
+        transition: all 0.2s ease;
+    }
+
+    .clear-btn:hover {
+        background: #e9ecef;
+        color: #343a40;
+        text-decoration: none;
+    }
+
+    .clear-btn i {
+        margin: 0;
+        font-size: 1rem;
     }
 
     @media (max-width: 768px) {
@@ -447,15 +550,21 @@ foreach ($books as $book) {
             flex-direction: column;
             align-items: stretch;
         }
-
         .toolbar-left,
         .toolbar-right {
             width: 100%;
+            justify-content: center;
         }
-
-        .filter-select,
-        .search-input-group {
+        .filter-select {
+            min-width: 100%;
             width: 100%;
+        }
+        .search-wrapper {
+            min-width: 100%;
+            width: 100%;
+        }
+        .search-input {
+            min-width: auto;
         }
     }
 </style>
@@ -527,7 +636,7 @@ foreach ($books as $book) {
             </button>
         </div>
         <div class="toolbar-right">
-            <form method="GET" class="d-flex gap-2 align-items-center">
+            <form method="GET" class="filter-form">
                 <?php if ($searchKeyword): ?>
                     <input type="hidden" name="search" value="<?= htmlspecialchars($searchKeyword) ?>">
                 <?php endif; ?>
@@ -538,15 +647,16 @@ foreach ($books as $book) {
                     <?php endforeach; ?>
                 </select>
             </form>
-            <form method="GET" class="d-flex gap-2 align-items-center">
+
+            <form method="GET" class="search-form">
                 <?php if ($filterCategory): ?>
                     <input type="hidden" name="filter_category" value="<?= htmlspecialchars($filterCategory) ?>">
                 <?php endif; ?>
-                <div class="input-group search-input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Search by title or author..." value="<?= htmlspecialchars($searchKeyword) ?>">
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i></button>
+                <div class="search-wrapper">
+                    <input type="text" name="search" class="search-input" placeholder="Search by title or author..." value="<?= htmlspecialchars($searchKeyword) ?>">
+                    <button type="submit" class="search-btn"><i class="fas fa-search"></i></button>
                     <?php if ($searchKeyword || $filterCategory): ?>
-                        <a href="manageBook.php" class="btn btn-secondary"><i class="fas fa-times"></i></a>
+                        <a href="manageBook.php" class="clear-btn"><i class="fas fa-times"></i></a>
                     <?php endif; ?>
                 </div>
             </form>
@@ -595,7 +705,7 @@ foreach ($books as $book) {
                         <tbody>
                             <?php $sn = 1;
                             foreach ($catBooks as $book): $isLowStock = ($book['stock'] <= $book['min_stock']); ?>
-                                <tr class="<?= $isLowStock ? 'low-stock' : '' ?>">
+                                <tr class="<?= $isLowStock ? 'low-stock' : '' ?> book-row" data-book-id="<?= $book['id'] ?>">
                                     <td><?= $sn++ ?></td>
                                     <td><img src="<?= htmlspecialchars($book['image']) ?>" class="book-thumb" onerror="this.src='/finalproject/booknestonlinebookstoresystem/Image/default.jpg'; this.style.opacity='0.7';"></td>
                                     <td><?= htmlspecialchars($book['title']) ?></td>
@@ -761,6 +871,27 @@ foreach ($books as $book) {
                 document.getElementById('imagePreviewContainer').style.display = 'block';
             };
             reader.readAsDataURL(file);
+        }
+    });
+
+    var restockBookId = <?= $restock_id ?>;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (restockBookId > 0) {
+            setTimeout(function() {
+                var rows = document.querySelectorAll('.book-row');
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i].getAttribute('data-book-id') == restockBookId) {
+                        rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        rows[i].style.backgroundColor = '#fff3cd';
+                        rows[i].style.transition = 'background-color 0.5s';
+                        setTimeout(function(row) {
+                            row.style.backgroundColor = '';
+                        }, 3000, rows[i]);
+                        break;
+                    }
+                }
+            }, 500);
         }
     });
 </script>
