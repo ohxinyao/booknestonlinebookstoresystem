@@ -51,10 +51,47 @@ if ($userRole == 'admin' && !$forceChange) {
     }
     include 'header.php';
     ?>
+    <style>
+        /* Admin - Red Theme */
+        .btn-primary {
+            background: linear-gradient(135deg, #dc3545, #b02a37);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #c82333, #a71d2a);
+        }
+        .btn-outline-secondary {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #dc3545, #b02a37) !important;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
-                <div class="card-header bg-warning">
+                <div class="card-header">
                     <h4 class="mb-0">Change Password (Admin)</h4>
                 </div>
                 <div class="card-body">
@@ -68,14 +105,14 @@ if ($userRole == 'admin' && !$forceChange) {
                             <label>Current Password</label>
                             <div class="input-group">
                                 <input type="password" name="current_password" id="current_password" class="form-control" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show</button>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label>New Password</label>
                             <div class="input-group">
                                 <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show</button>
                             </div>
                             <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
                         </div>
@@ -83,7 +120,7 @@ if ($userRole == 'admin' && !$forceChange) {
                             <label>Confirm New Password</label>
                             <div class="input-group">
                                 <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show</button>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Update Password</button>
@@ -133,10 +170,99 @@ if ($forceChange) {
     }
     include 'header.php';
     ?>
+    <style>
+        /* Force change - detect role */
+        <?php if ($userRole == 'admin'): ?>
+        .btn-primary {
+            background: linear-gradient(135deg, #dc3545, #b02a37);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #c82333, #a71d2a);
+        }
+        .btn-outline-secondary {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #dc3545, #b02a37) !important;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+        }
+        <?php elseif ($userRole == 'staff'): ?>
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #218838, #166b2b);
+        }
+        .btn-outline-secondary {
+            border-color: #28a745;
+            color: #28a745;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #28a745, #1e7e34) !important;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        <?php else: ?>
+        .btn-primary {
+            background: linear-gradient(135deg, #b85c38, #8f3f25);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #c4663f, #7b351f);
+        }
+        .btn-outline-secondary {
+            border-color: #b85c38;
+            color: #b85c38;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #b85c38;
+            border-color: #b85c38;
+            color: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #b85c38, #8f3f25) !important;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #b85c38;
+            box-shadow: 0 0 0 0.2rem rgba(184, 92, 56, 0.25);
+        }
+        <?php endif; ?>
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
-                <div class="card-header bg-warning">
+                <div class="card-header">
                     <h4 class="mb-0">Set Your New Password</h4>
                 </div>
                 <div class="card-body">
@@ -148,7 +274,7 @@ if ($forceChange) {
                             <label>New Password</label>
                             <div class="input-group">
                                 <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show</button>
                             </div>
                             <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
                         </div>
@@ -156,7 +282,7 @@ if ($forceChange) {
                             <label>Confirm New Password</label>
                             <div class="input-group">
                                 <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show</button>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Update Password</button>
@@ -211,10 +337,47 @@ if ($userRole == 'customer') {
     }
     include 'header.php';
     ?>
+    <style>
+        /* Customer - Orange Theme */
+        .btn-primary {
+            background: linear-gradient(135deg, #b85c38, #8f3f25);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #c4663f, #7b351f);
+        }
+        .btn-outline-secondary {
+            border-color: #b85c38;
+            color: #b85c38;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #b85c38;
+            border-color: #b85c38;
+            color: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #b85c38, #8f3f25) !important;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #b85c38;
+            box-shadow: 0 0 0 0.2rem rgba(184, 92, 56, 0.25);
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
-                <div class="card-header bg-warning">
+                <div class="card-header">
                     <h4 class="mb-0">Change Password</h4>
                 </div>
                 <div class="card-body">
@@ -228,14 +391,14 @@ if ($userRole == 'customer') {
                             <label>Current Password</label>
                             <div class="input-group">
                                 <input type="password" name="current_password" id="current_password" class="form-control" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password')">Show</button>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label>New Password</label>
                             <div class="input-group">
                                 <input type="password" name="new_password" id="new_password" class="form-control" minlength="8" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password')">Show</button>
                             </div>
                             <small class="text-muted">Password must be at least 8 characters, include uppercase, number, and special character.</small>
                         </div>
@@ -243,7 +406,7 @@ if ($userRole == 'customer') {
                             <label>Confirm New Password</label>
                             <div class="input-group">
                                 <input type="password" name="confirm_password" id="confirm_password" class="form-control" minlength="8" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show Password</button>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password')">Show</button>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Update Password</button>
@@ -283,10 +446,50 @@ if ($userRole == 'staff') {
     }
     include 'header.php';
     ?>
+    <style>
+        /* Staff - Green Theme */
+        .btn-primary {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #218838, #166b2b);
+        }
+        .btn-primary:disabled {
+            background: #6c757d;
+        }
+        .btn-outline-secondary {
+            border-color: #28a745;
+            color: #28a745;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #28a745, #1e7e34) !important;
+            color: white;
+        }
+        .form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+    </style>
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow">
-                <div class="card-header bg-warning">
+                <div class="card-header">
                     <h4 class="mb-0">Request Password Change</h4>
                 </div>
                 <div class="card-body">
