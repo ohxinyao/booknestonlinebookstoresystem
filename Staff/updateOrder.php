@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order_id']) && isset($
         exit;
     }
 
-    $stmt = $pdo->prepare("SELECT payment_status, status, order_number, user_id FROM orders WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT payment_status, status, shipped_date, order_number, user_id FROM orders WHERE id = ?");
     $stmt->execute([$order_id]);
     $order = $stmt->fetch();
     if (!$order) {
@@ -25,6 +25,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order_id']) && isset($
         exit;
     }
 
+    if ($order['status'] == 'cancelled') {
+        $_SESSION['flash_error'] = "Cancelled orders cannot be modified.";
+        header("Location: staffManage.php");
+        exit;
+    }
+    
+    if ($order['status'] == 'shipped' && in_array($new_status, ['pending', 'paid', 'processing'])) {
+        $_SESSION['flash_error'] = "Shipped orders cannot be reverted.";
+        header("Location: staffManage.php");
+        exit;
+    }
+
+    if ($new_status == 'completed' && empty($order['shipped_date'])) {
+        $_SESSION['flash_error'] = "Order must be shipped before it can be completed.";
+        header("Location: staffManage.php");
+        exit;
+    }
     $payment_status = $order['payment_status'];
 
     if ($payment_status !== 'paid' && in_array($new_status, ['processing', 'shipped', 'completed'])) {
