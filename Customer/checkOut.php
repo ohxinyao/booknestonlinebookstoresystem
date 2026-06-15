@@ -364,7 +364,7 @@ include '../Customize&Database/header.php';
 
                 <div class="card-body">
                     <div class="input-group mb-2">
-                        <input type="text" id="voucher_code" class="form-control" placeholder="Enter voucher code (auto-converted to uppercase)">
+                        <input type="text" id="voucher_code" class="form-control" placeholder="Enter voucher code">
                         <button class="btn btn-outline-primary" type="button" id="apply_voucher">Apply</button>
                     </div>
 
