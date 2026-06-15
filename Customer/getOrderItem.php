@@ -1,8 +1,8 @@
 <?php
+// Customer/getOrderItem.php
 session_start();
 require_once '../Customize&Database/setDatabase.php';
 require_once '../Customize&Database/access.php';
-requireLogin();
 
 $order_id = isset($_GET['order_id']) ? (int)$_GET['order_id'] : 0;
 if (!$order_id) {
@@ -10,11 +10,24 @@ if (!$order_id) {
     exit;
 }
 
-$check = $pdo->prepare("SELECT id FROM orders WHERE id = ? AND user_id = ?");
-$check->execute([$order_id, $_SESSION['user_id']]);
-if (!$check->fetch()) {
-    echo json_encode(['success' => false, 'message' => 'Access denied']);
-    exit;
+$userRole = $_SESSION['user_role'] ?? '';
+$userId = $_SESSION['user_id'] ?? 0;
+
+if ($userRole === 'admin' || $userRole === 'staff') {
+    $check = $pdo->prepare("SELECT id FROM orders WHERE id = ?");
+    $check->execute([$order_id]);
+    if (!$check->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Order not found']);
+        exit;
+    }
+} else {
+    requireLogin();
+    $check = $pdo->prepare("SELECT id FROM orders WHERE id = ? AND user_id = ?");
+    $check->execute([$order_id, $userId]);
+    if (!$check->fetch()) {
+        echo json_encode(['success' => false, 'message' => 'Access denied']);
+        exit;
+    }
 }
 
 $stmt = $pdo->prepare("
