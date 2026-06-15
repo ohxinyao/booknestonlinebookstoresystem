@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 12, 2026 at 11:48 AM
+-- Generation Time: Jun 14, 2026 at 12:14 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -360,6 +360,8 @@ CREATE TABLE `users` (
   `id` int(10) UNSIGNED NOT NULL,
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `address` text DEFAULT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('customer','staff','admin') NOT NULL DEFAULT 'customer',
   `email_verified` tinyint(1) NOT NULL DEFAULT 0,
@@ -375,20 +377,20 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `name`, `email`, `password`, `role`, `email_verified`, `verification_token`, `reset_token`, `reset_expires`, `created_at`, `must_change_password`, `last_activity`) VALUES
-(1, 'PHANG YU XUE', 'phangyuxue@gmail.com', '$2y$10$RuqGp4TC7nlwgKQQwodVrOcovQrpTGEABw59Kj3WXVXPY3V.Enq9G', 'customer', 1, NULL, NULL, NULL, '2026-05-03 15:01:56', 0, '2026-06-11 14:12:30'),
-(2, 'Admin', 'phangyuxue@graduate.utm.my', '$2y$10$aLIeo2UrbwoBUYFh8L8nX.hTGs/QwVmRodYHtRDNZZ4VpbLxjcJmm', 'admin', 1, NULL, NULL, NULL, '2026-05-05 08:13:20', 0, '2026-06-11 12:10:06'),
-(3, 'Staff_1', 'staff123@gmail.com', '$2y$10$kt/IDtTosIsUrF.h99tW8uVKUe.TDq4xvDVnRoh9YNd8dprhWTI.2', 'staff', 1, NULL, '10d38dadc75bcc7332b8586fe57cabb2c07b60cae86e2002156a3cb6363f52fe', '2026-05-07 12:41:40', '2026-05-05 13:44:38', 0, '2026-05-28 09:15:32'),
-(4, 'Staff_2', 'staff456@gmail.com', '$2y$10$DdTE0yaqQPQdyxBM40vwgOcSp.A.w6J8iBrqN21N.YHRLhH7waiDe', 'staff', 1, NULL, NULL, NULL, '2026-05-08 10:11:34', 0, NULL),
-(5, 'Staff_3', 'staff678@gmail.com', '$2y$10$v5.Ok9pAN/RDaSWgMY.fSOJJyZ..bBcu4L5CuXW9BXDGogD10AWdi', 'staff', 1, NULL, NULL, NULL, '2026-05-08 14:13:46', 0, NULL),
-(6, 'Staff_4', 'staff789@gmail.com', '$2y$10$58GcpC6Mxnjbarazeum/lOnd76cbyjOGGOBXtH53O/Lqp18YGqVRy', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:25:45', 0, NULL),
-(7, 'Staff_5', 'staff246@gmail.com', '$2y$10$eHDpq2dwQ4rAm0PG.c9uL.RhmH7sndcNZ9e60bPMP5ombmF8MvrNe', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:26:26', 0, NULL),
-(8, 'Staff_6', 'staff135@gmail.com', '$2y$10$C.ryjfPLs7aLLzwStLeZ/eCO2mhUCIdvGcT19hmwfkuXMkWrkZ/nO', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:29:09', 0, NULL),
-(9, 'Staff_7', 'staff234@gmail.com', '$2y$10$xTrrmr1XSksGOvSEHVsJ5Ozim5SERlmlCxOI12hPViTxsrk86Wzl2', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:29:30', 0, NULL),
-(10, 'Staff_8', 'staff579@gmail.com', '$2y$10$YKDydq1h2RG86S8lVvE0x.Gq6Q7/aOEHQo5gBf4yGD288a9dy2Ek2', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:30:00', 0, NULL),
-(11, 'Staff_9', 'staff567@gmail.com', '$2y$10$cFm/cU3y1ugLFamd5.kNFe4PhsdDoiXSPSzcogZb.BT9MgZOdY.HG', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:30:42', 0, NULL),
-(12, 'Staff_10', 'staff357@gmail.com', '$2y$10$blN/q6q2be/UjL1Km/DyhO6lM2tZB3ycWn4kHdxmRG5gIfD2h.Uq.', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:31:25', 0, NULL),
-(14, 'Staff_11', 'projectfinal432@gmail.com', '$2y$10$fH5wdJQvG9ddQk/sQku5Z.uXH019QA9YFNDTZeZ61bVlkgcZw0f2C', 'staff', 1, NULL, NULL, NULL, '2026-05-14 03:34:51', 0, '2026-06-11 12:09:08');
+INSERT INTO `users` (`id`, `name`, `email`, `phone`, `address`, `password`, `role`, `email_verified`, `verification_token`, `reset_token`, `reset_expires`, `created_at`, `must_change_password`, `last_activity`) VALUES
+(1, 'PHANG YU XUE', 'phangyuxue@gmail.com', NULL, NULL, '$2y$10$RuqGp4TC7nlwgKQQwodVrOcovQrpTGEABw59Kj3WXVXPY3V.Enq9G', 'customer', 1, NULL, NULL, NULL, '2026-05-03 15:01:56', 0, '2026-06-11 14:12:30'),
+(2, 'Admin', 'phangyuxue@graduate.utm.my', NULL, NULL, '$2y$10$aLIeo2UrbwoBUYFh8L8nX.hTGs/QwVmRodYHtRDNZZ4VpbLxjcJmm', 'admin', 1, NULL, NULL, NULL, '2026-05-05 08:13:20', 0, '2026-06-11 12:10:06'),
+(3, 'Staff_1', 'staff123@gmail.com', NULL, NULL, '$2y$10$kt/IDtTosIsUrF.h99tW8uVKUe.TDq4xvDVnRoh9YNd8dprhWTI.2', 'staff', 1, NULL, '10d38dadc75bcc7332b8586fe57cabb2c07b60cae86e2002156a3cb6363f52fe', '2026-05-07 12:41:40', '2026-05-05 13:44:38', 0, '2026-05-28 09:15:32'),
+(4, 'Staff_2', 'staff456@gmail.com', NULL, NULL, '$2y$10$DdTE0yaqQPQdyxBM40vwgOcSp.A.w6J8iBrqN21N.YHRLhH7waiDe', 'staff', 1, NULL, NULL, NULL, '2026-05-08 10:11:34', 0, NULL),
+(5, 'Staff_3', 'staff678@gmail.com', NULL, NULL, '$2y$10$v5.Ok9pAN/RDaSWgMY.fSOJJyZ..bBcu4L5CuXW9BXDGogD10AWdi', 'staff', 1, NULL, NULL, NULL, '2026-05-08 14:13:46', 0, NULL),
+(6, 'Staff_4', 'staff789@gmail.com', NULL, NULL, '$2y$10$58GcpC6Mxnjbarazeum/lOnd76cbyjOGGOBXtH53O/Lqp18YGqVRy', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:25:45', 0, NULL),
+(7, 'Staff_5', 'staff246@gmail.com', NULL, NULL, '$2y$10$eHDpq2dwQ4rAm0PG.c9uL.RhmH7sndcNZ9e60bPMP5ombmF8MvrNe', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:26:26', 0, NULL),
+(8, 'Staff_6', 'staff135@gmail.com', NULL, NULL, '$2y$10$C.ryjfPLs7aLLzwStLeZ/eCO2mhUCIdvGcT19hmwfkuXMkWrkZ/nO', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:29:09', 0, NULL),
+(9, 'Staff_7', 'staff234@gmail.com', NULL, NULL, '$2y$10$xTrrmr1XSksGOvSEHVsJ5Ozim5SERlmlCxOI12hPViTxsrk86Wzl2', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:29:30', 0, NULL),
+(10, 'Staff_8', 'staff579@gmail.com', NULL, NULL, '$2y$10$YKDydq1h2RG86S8lVvE0x.Gq6Q7/aOEHQo5gBf4yGD288a9dy2Ek2', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:30:00', 0, NULL),
+(11, 'Staff_9', 'staff567@gmail.com', NULL, NULL, '$2y$10$cFm/cU3y1ugLFamd5.kNFe4PhsdDoiXSPSzcogZb.BT9MgZOdY.HG', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:30:42', 0, NULL),
+(12, 'Staff_10', 'staff357@gmail.com', NULL, NULL, '$2y$10$blN/q6q2be/UjL1Km/DyhO6lM2tZB3ycWn4kHdxmRG5gIfD2h.Uq.', 'staff', 1, NULL, NULL, NULL, '2026-05-09 09:31:25', 0, NULL),
+(14, 'Staff_11', 'projectfinal432@gmail.com', NULL, NULL, '$2y$10$fH5wdJQvG9ddQk/sQku5Z.uXH019QA9YFNDTZeZ61bVlkgcZw0f2C', 'staff', 1, NULL, NULL, NULL, '2026-05-14 03:34:51', 0, '2026-06-14 10:13:03');
 
 -- --------------------------------------------------------
 
@@ -573,7 +575,7 @@ ALTER TABLE `books`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=281;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=365;
 
 --
 -- AUTO_INCREMENT for table `chat_messages`
