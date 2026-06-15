@@ -28,7 +28,7 @@ $recentOrders = $pdo->query("
 ")->fetchAll();
 
 $lowStockBooks = $pdo->query("
-    SELECT title, stock, min_stock
+    SELECT id, title, stock, min_stock
     FROM books
     WHERE stock <= min_stock
     ORDER BY stock ASC
@@ -127,9 +127,26 @@ $pendingPasswordRequests = $pdo->query("
         background: linear-gradient(135deg, #b85c38, #8f3f25);
         border: none;
         color: white;
+        text-decoration: none;
+        display: inline-block;
     }
     .btn-sm-primary:hover {
         background: #9a4a2c;
+        color: white;
+    }
+    .btn-sm-restock {
+        border-radius: 30px;
+        padding: 0.2rem 0.8rem;
+        font-size: 0.75rem;
+        background: linear-gradient(135deg, #b85c38, #8f3f25);
+        border: none;
+        color: white;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-sm-restock:hover {
+        background: #9a4a2c;
+        color: white;
     }
 </style>
 
@@ -217,26 +234,26 @@ $pendingPasswordRequests = $pdo->query("
                 <div class="table-responsive">
                     <table class="table table-bordered table-custom mb-0">
                         <thead class="table-dark">
-                            <tr><th>Book Title</th><th>Stock</th><th>Min Threshold</th></tr>
+                            <tr><th>Book Title</th><th>Stock</th><th>Min Threshold</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                         <?php if (empty($lowStockBooks)): ?>
-                            <tr><td colspan="3" class="text-center text-success">✅ No low stock items</td></tr>
+                            <tr><td colspan="4" class="text-center text-success">✅ No low stock items</div></tr>
                         <?php else: foreach ($lowStockBooks as $book): ?>
                             <tr class="table-warning">
-                                <td><?= htmlspecialchars($book['title']) ?></td>
-                                <td class="fw-bold text-danger"><?= $book['stock'] ?></td>
-                                <td><?= $book['min_stock'] ?></td>
+                                <td><?= htmlspecialchars($book['title']) ?></div>
+                                <td class="fw-bold text-danger"><?= $book['stock'] ?></div>
+                                <td><?= $book['min_stock'] ?></div>
+                                <td>
+                                    <a href="manageBook.php?restock=<?= $book['id'] ?>" class="btn-sm-restock">
+                                        <i class="fas fa-boxes"></i> Restock
+                                    </a>
+                                </div>
                             </tr>
                         <?php endforeach; endif; ?>
                         </tbody>
                     </table>
                 </div>
-                <?php if (!empty($lowStockBooks)): ?>
-                <div class="p-2 text-end border-top">
-                    <a href="manageBook.php" class="btn btn-sm-primary">Manage Books</a>
-                </div>
-                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -254,24 +271,24 @@ $pendingPasswordRequests = $pdo->query("
                         </thead>
                         <tbody>
                         <?php if (empty($recentOrders)): ?>
-                            <tr><td colspan="4" class="text-center">No orders</td></tr>
+                            <tr><td colspan="4" class="text-center">No orders</div></tr>
                         <?php else: foreach ($recentOrders as $order): ?>
                             <tr>
-                                <td><?= htmlspecialchars($order['order_number']) ?></td>
-                                <td><?= date('d M H:i', strtotime($order['order_date'])) ?></td>
+                                <td><?= htmlspecialchars($order['order_number']) ?></div>
+                                <td><?= date('d M H:i', strtotime($order['order_date'])) ?></div>
                                 <td>
                                     <span class="badge bg-<?= $order['status'] == 'completed' ? 'success' : ($order['status'] == 'cancelled' ? 'danger' : 'warning') ?>">
                                         <?= ucfirst($order['status']) ?>
                                     </span>
-                                 </td>
-                                <td><?= ucfirst($order['payment_status']) ?></td>
+                                  </div>
+                                <td><?= ucfirst($order['payment_status']) ?></div>
                             </tr>
                         <?php endforeach; endif; ?>
                         </tbody>
                     </table>
                 </div>
                 <div class="p-2 text-end border-top">
-                    <a href="manageOrder.php" class="btn btn-sm-primary">View All Orders</a>
+                    <a href="manageOrder.php" class="btn-sm-primary">View All Orders</a>
                 </div>
             </div>
         </div>
@@ -287,12 +304,12 @@ $pendingPasswordRequests = $pdo->query("
                         </thead>
                         <tbody>
                         <?php if (empty($topBooks)): ?>
-                            <tr><td colspan="3" class="text-center">No sales data</td></tr>
+                            <tr><td colspan="3" class="text-center">No sales data</div></tr>
                         <?php else: $rank = 1; foreach ($topBooks as $book): ?>
                             <tr>
-                                <td><?= $rank++ ?></td>
-                                <td><?= htmlspecialchars($book['title']) ?></td>
-                                <td class="fw-semibold"><?= number_format($book['sales']) ?></td>
+                                <td><?= $rank++ ?></div>
+                                <td><?= htmlspecialchars($book['title']) ?></div>
+                                <td class="fw-semibold"><?= number_format($book['sales']) ?></div>
                             </tr>
                         <?php endforeach; endif; ?>
                         </tbody>
